@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="https://static.jianshukeji.com/highcharts/images/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1">	
+<script src="https://img.hcharts.cn/jquery/jquery-1.8.3.min.js"></script>
+<script src="https://img.hcharts.cn/highcharts/highcharts.js"></script>
+<script src="https://img.hcharts.cn/highcharts/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/maps/modules/map.js"></script>
+<script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+</head>
+<body>
+	<div id="container" style="min-width:400px;height:400px"></div>
+
+	<script>
+	$(function () {
+	var data =  [{"employeeCode":10061600,"working":5,"beforeWork":11,"employeeName":"上瀧　哲路"},
+					{"employeeCode":10071407,"working":4,"beforeWork":12,"employeeName":"古川　雄一"},
+					{"employeeCode":10072570,"working":5,"beforeWork":12,"employeeName":"鷲見　謙司"},
+					{"employeeCode":10079249,"working":5,"beforeWork":12,"employeeName":"向井　強"},
+					{"employeeCode":10081944,"working":5,"beforeWork":12,"employeeName":"平川　徳明"},
+					{"employeeCode":10116658,"working":3,"beforeWork":13,"employeeName":"小石原　貴史"},
+					{"employeeCode":235,"working":10,"beforeWork":20,"employeeName":"坂本　将隆"},
+					{"employeeCode":236,"working":11,"beforeWork":21,"employeeName":"林　健一郎"},
+					{"employeeCode":238,"working":12,"beforeWork":22,"employeeName":"徳永　偉志男"},
+					{"employeeCode":239,"working":13,"beforeWork":19,"employeeName":"唐田　洋一"},
+					{"employeeCode":240,"working":14,"beforeWork":18,"employeeName":"宮岡　清隆"},
+					{"employeeCode":246,"working":14,"beforeWork":20,"employeeName":"東江　春奈"},
+					{"employeeCode":241,"working":15,"beforeWork":24,"employeeName":"古賀　善敏"},
+					{"employeeCode":242,"working":11,"beforeWork":30,"employeeName":"岩野　宏之"},
+					{"employeeCode":243,"working":12,"beforeWork":31,"employeeName":"石塚　温司"},
+					{"employeeCode":244,"working":13,"beforeWork":31,"employeeName":"古閑　一明"},
+					{"employeeCode":248,"working":13,"beforeWork":30,"employeeName":"宮下　修司"}
+		
+					
+					
+					]
+	
+	
+	data.map(function(el,i){
+	         data[i]=({x:el.working,y:el.beforeWork,employeeCode:el.employeeCode,employeeName:el.employeeName}); 
+	    })
+    $('#container').highcharts({
+        chart: {
+            type: 'scatter',
+            zoomType: 'xy',
+			panning: true
+        },
+        title: {
+            text: 'TRgrouping'
+        },
+        
+        xAxis: {
+	            gridLineWidth: 1
+	    },
+	    yAxis: {
+	            startOnTick: false,
+	            endOnTick: false
+	    },
+        legend: {
+            
+        },
+		 mapNavigation: {
+                enabled: true,
+                enableButtons: true
+            },
+		 tooltip: {
+			   useHTML: true,
+			   headerFormat: '<table>',
+			   pointFormat: '在職中:{point.x}<br/>' +
+			   '入職前:{point.y}<br/>' +
+			   '社員CD:{point.employeeCode}<br/>' +
+			   '社員名:{point.employeeName}',
+			   followPointer: true
+	    },
+        plotOptions: {
+			   series: {
+				   dataLabels: {
+					   enabled: true,
+					   format: '{point.employeeName}'
+				   }
+			   }
+	    },
+        series: [{
+            data:  data
+        }]
+    });
+});
+</script>
+</body>
+</html>
