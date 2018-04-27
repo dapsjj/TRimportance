@@ -18,22 +18,38 @@ var dom = document.getElementById("container");
 var myChart = echarts.init(dom);
 var app = {};
 option = null;
-var data = [
-[0,1884],
-[1,2936],
-[2,2039],
-[3,1948],
-[4,1814],
-[5,2071],
-[6,2183],
-[7,3234],
-[8,3426],
-[9,2188]
-
+var data = 
+[
+{"reportYear":2018,"reportWeek":1,"employeeCode":1,"employeeName":"peter","importanceDegree":1884.0,"counter":3443.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":2,"employeeCode":1,"employeeName":"Peter","importanceDegree":2936.0,"counter":3263.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":3,"employeeCode":1,"employeeName":"Peter","importanceDegree":2039.0,"counter":4182.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":4,"employeeCode":1,"employeeName":"Peter","importanceDegree":1948.0,"counter":2617.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":5,"employeeCode":1,"employeeName":"Peter","importanceDegree":1814.0,"counter":2762.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":6,"employeeCode":1,"employeeName":"Peter","importanceDegree":2071.0,"counter":3923.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":7,"employeeCode":1,"employeeName":"Peter","importanceDegree":2183.0,"counter":2966.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":8,"employeeCode":1,"employeeName":"Peter","importanceDegree":3234.0,"counter":2618.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":9,"employeeCode":1,"employeeName":"Peter","importanceDegree":3426.0,"counter":3497.0,"importanceNegative":null,"importancePositive":null},
+{"reportYear":2018,"reportWeek":10,"employeeCode":1,"employeeName":"Peter","importanceDegree":2188.0,"counter":3497.0,"importanceNegative":null,"importancePositive":null}
 ];
 
+
+
+var arryList = [];
+var employeeName = data[0].employeeName;
+if (data.length>0) {
+	for(var i=0;i<data.length;i++){  
+		var arry = [];
+		arry.push(data[i].reportWeek-1);//注意:X周序列必须从0开始否则会导致y=ax+b的b的值不对
+		arry.push(data[i].importanceDegree);//这里只接受2列数据作为X轴和Y轴,多写的话会导致后面的拟合线不显示
+		//arry.push(data[i].reportYear);
+		//arry.push(data[i].employeeCode);
+		//arry.push(data[i].employeeName);
+		//arry.push(data[i].counter);
+		arryList.push(arry);
+		}
+}
 // See https://github.com/ecomfe/echarts-stat
-var myRegression = ecStat.regression('polynomial', data, 1);//1次方
+var myRegression = ecStat.regression('polynomial', arryList, 1);//1次方
 //var myRegression = ecStat.regression('polynomial', data, 3);//3次方
 
 myRegression.points.sort(function(a, b) {
@@ -42,16 +58,16 @@ myRegression.points.sort(function(a, b) {
 
 option = {
 
-    tooltip: {
+    tooltip: { //提示框组件
         trigger: 'axis',
         axisPointer: {
             type: 'cross'
         }
     },
     title: {
-        text: '18 companies net profit and main business income (million)',
-        subtext: 'By ecStat.regression',
-        sublink: 'https://github.com/ecomfe/echarts-stat',
+        text: employeeName+'重要度',
+        //subtext: '子标题',
+        //sublink: 'https://github.com/ecomfe/echarts-stat',
         left: 'center',
         top: 16
     },
@@ -67,7 +83,7 @@ option = {
     },
     yAxis: {
         type: 'value',
-        min: -40,
+        min: 0,
         splitLine: {
             lineStyle: {
                 type: 'dashed'
@@ -79,21 +95,25 @@ option = {
     },
 	
     series: [{
-        name: 'scatter',
+        name: employeeName,
         type: 'scatter',
 		//type: 'line',
         label: {
             normal: {
-                show: true,
+                show: true,//显示数值
                 position: 'top',
+				formatter: function (params) { //显示数据的格式
+		            if (params.value.length > 1) {
+						return params.data[1];
+					}
+		        },
                 textStyle: {
                     color: 'red',
                     fontSize: 16
                 }
-            },
-			
+            },	
         },
-        data: data
+        data: arryList
     }, {
         name: 'line',
         type: 'line',
@@ -123,12 +143,10 @@ option = {
         }
     }]
 };
-console.info(myRegression.expression);
 var myvalue = myRegression.expression;
-var a = myvalue.substring(myvalue.indexOf('=')+1, myvalue.indexOf('x'));
-var b = myvalue.substring(myvalue.indexOf('+')+1, myvalue.length);
-console.info(a.length);
-console.info(b.length);
+var a = myvalue.substring(myvalue.indexOf('=')+1, myvalue.indexOf('x'));//直线方程中a的值
+var b = myvalue.substring(myvalue.indexOf('+')+1, myvalue.length);//直线方程中b的值
+
 
 if (option && typeof option === "object") {
     myChart.setOption(option, true);
