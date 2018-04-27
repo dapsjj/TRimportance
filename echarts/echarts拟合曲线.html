@@ -11,7 +11,6 @@
        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/dataTool.min.js"></script>
        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/china.js"></script>
        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/map/js/world.js"></script>
-       <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/echarts/extension/bmap.min.js"></script>
        <script type="text/javascript" src="http://echarts.baidu.com/gallery/vendors/simplex.js"></script>
        <script type="text/javascript">
@@ -31,12 +30,11 @@ var data = [
 [8,3426],
 [9,2188]
 
-
 ];
 
 // See https://github.com/ecomfe/echarts-stat
-//var myRegression = ecStat.regression('polynomial', data, 1);//1次方
-var myRegression = ecStat.regression('polynomial', data, 3);//3次方
+var myRegression = ecStat.regression('polynomial', data, 1);//1次方
+//var myRegression = ecStat.regression('polynomial', data, 3);//3次方
 
 myRegression.points.sort(function(a, b) {
     return a[0] - b[0];
@@ -59,6 +57,7 @@ option = {
     },
     xAxis: {
         type: 'value',
+		minInterval: 1,//X周最小分割度
         splitLine: {
             lineStyle: {
                 type: 'dashed'
@@ -78,6 +77,7 @@ option = {
     grid: {
         top: 90
     },
+	
     series: [{
         name: 'scatter',
         type: 'scatter',
@@ -90,7 +90,11 @@ option = {
                     color: 'blue',
                     fontSize: 16
                 }
-            }
+            },
+			normal: {
+               show: true,  //显示数据的值
+			   position: ['-10', '-20']//位置
+           }
         },
         data: data
     }, {
@@ -121,7 +125,14 @@ option = {
             }]
         }
     }]
-};;
+};
+console.info(myRegression.expression);
+var myvalue = myRegression.expression;
+var a = myvalue.substring(myvalue.indexOf('=')+1, myvalue.indexOf('x'));
+var b = myvalue.substring(myvalue.indexOf('+')+1, myvalue.length);
+console.info(a.length);
+console.info(b.length);
+
 if (option && typeof option === "object") {
     myChart.setOption(option, true);
 }
