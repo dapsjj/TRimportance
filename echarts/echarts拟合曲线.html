@@ -35,17 +35,19 @@ var data =
 
 
 var arryList = [];
+var arryList_1 = [];
 var employeeName = data[0].employeeName;
 if (data.length>0) {
 	for(var i=0;i<data.length;i++){  
 		var arry = [];
 		arry.push(data[i].reportWeek-1);//注意:X周序列必须从0开始否则会导致y=ax+b的b的值不对
-		arry.push(data[i].importanceDegree);//这里只接受2列数据作为X轴和Y轴,多写的话会导致后面的拟合线不显示
-		//arry.push(data[i].reportYear);
-		//arry.push(data[i].employeeCode);
-		//arry.push(data[i].employeeName);
-		//arry.push(data[i].counter);
+		arry.push(data[i].importanceDegree);//这里只接受数字类型的,如果放进去名字或者null则拟合线就画不出来了
 		arryList.push(arry);
+		arry.push(data[i].reportYear);
+		arry.push(data[i].employeeCode);
+		arry.push(data[i].counter);
+		//arry.push(data[i].employeeName);
+		arryList_1.push(arry);
 		}
 }
 // See https://github.com/ecomfe/echarts-stat
@@ -62,7 +64,15 @@ option = {
         trigger: 'axis',
         axisPointer: {
             type: 'cross'
-        }
+        },
+
+		formatter : function (params) {
+		   if (params[0].value.length > 1) {
+			   return '重要度: ' + params[0].value[1] + '<br>'
+			   + '字数: ' + params[0].value[4] + '<br>';
+		    }
+	    },
+		
     },
     title: {
         text: employeeName+'重要度',
