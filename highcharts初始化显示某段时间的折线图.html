@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="https://static.jianshukeji.com/highcharts/images/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://img.hcharts.cn/jquery/jquery-1.8.3.min.js"></script>
+<script src="https://img.hcharts.cn/highcharts/highcharts.js"></script>
+<script src="https://img.hcharts.cn/highcharts/modules/exporting.js"></script>
+<script src="https://img.hcharts.cn/highcharts/modules/oldie.js"></script>
+<script src="https://img.hcharts.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+</head>
+<body>
+
+<div id="container" style="min-width:400px;height:400px"></div>
+<div id="container"></div>
+<div id="rangeSelector">
+<select id="start"></select>
+<select id="end"></select>
+</div>
+<script>
+var min = 10,
+  max = 14;
+var chart = null;
+data1 = [1884, 2936, 2039, 1948, 1814, 2071, 2183, 3234, 3426, 2188, 1884, 2936, 2039, 1948, 1814, 2071, 2183, 3234, 3426, 2188]
+data2 = [875, 694, 919, 1092, 815, 1137, 1421, 1547, 1737, 1748, 875, 694, 919, 1092, 815, 1137, 1421, 1547, 1737, 1748]
+
+var weeks = ['2017week43', '2017week44', '2017week45', '2017week46', '2017week47', '2017week48', '2017week49', '2017week50', '2017week51', '2017week52', '2018week1', '2018week2', '2018week3', '2018week4', '2018week5', '2018week6', '2018week7', '2018week8', '2018week9', '2018week10']
+chart = Highcharts.chart('container', {
+  chart: {
+    zoomType: 'xy'
+  },
+  title: {
+    text: 'Importance'
+  },
+  xAxis: {
+    minRange: 1,
+    categories: weeks
+  },
+  yAxis: {
+    title: {
+      text: 'Importance'
+    }
+  },
+  legend: {
+    enabled: false
+  },
+  plotOptions: {
+    line: {
+      marker: {
+        radius: 2
+      },
+      dataLabels: {
+        enabled: true
+      },
+      lineWidth: 1,
+      states: {
+        hover: {
+          lineWidth: 1
+        }
+      },
+      threshold: null
+    }
+  },
+  series: [{
+      type: 'line',
+      name: 'employee1',
+      data: data1
+    },
+    {
+      type: 'line',
+      name: 'employee2',
+      data: data2
+    }
+  ],
+  exporting: {
+    buttons: {
+      moveRight: {
+        text: '>>',
+        onclick: function(){
+          var canShift = max < 19
+          max = canShift ? max + 1 : max;
+          min = canShift ? min + 1 : min;
+          chart.xAxis[0].setExtremes(min, max)
+        }
+      },
+      increasePeriod: {
+        text: '+',
+        onclick: function() {
+          max = max < 19 ? max + 1 : max;
+          chart.xAxis[0].setExtremes(min, max)
+        }
+      },
+      decreasePeriod: {
+        text: '-',
+        onclick: function() {
+          max = max > min ? max - 1 : max
+          chart.xAxis[0].setExtremes(min, max)
+        }
+      },
+      moveLeft: {
+        text: '<<',
+        onclick: function() {
+          var canShift = min > 0
+          min = canShift ? min - 1 : min;
+          max = canShift ? max -1 : max;
+          chart.xAxis[0].setExtremes(min, max)
+        }
+      }
+    }
+  }
+});
+
+$.each(weeks, function(index, week){
+  $('<option>', {
+    value: index,
+    text: week
+  }).appendTo($('select'))
+})
+
+$('select').on('change', function(){
+  min = parseInt($('#start').val());
+  max = parseInt($('#end').val());
+  if(min > max){
+     max = min
+     $('#start').val(min)
+     $('#end').val(max)
+  }
+  chart.xAxis[0].setExtremes(min, max)
+})
+
+$('#start').val(min)
+$('#end').val(max).trigger('change')
+
+chart.showResetZoom();
+</script>
+</body>
+</html>
