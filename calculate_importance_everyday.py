@@ -538,13 +538,13 @@ def generate_appointed_importance_data(server, user, password, database, employe
         raise ex
 
 
-def insert_report_importance(server, user, password, database, datalist):
+def insert_report_importance_from_report_have(server, user, password, database, datalist):
     '''
     :param server:服务器名称
     :param user:用户名
     :param password:密码
     :param database:数据库名
-    :param data_addto_report_importance:插入到report_importance的列表
+    :param datalist:插入到report_importance的列表
     '''
     if datalist:
         try:
@@ -573,8 +573,88 @@ def insert_report_importance(server, user, password, database, datalist):
         finally:
             conn.close()
     else:
-        logger.error("Call method insert_report_importance() error!There is a null value in the parameters.")
+        logger.error("Call method insert_report_importance_from_report_have() error!There is a null value in the parameters.")
         raise
+
+
+def insert_report_importance_from_report_donot_have(server, user, password, database):
+    '''
+    :param server:服务器名称
+    :param user:用户名
+    :param password:密码
+    :param database:数据库名
+    :param datalist:插入到report_importance的列表
+    '''
+    try:
+        employee_list = []
+        conn = pymssql.connect(server, user, password, database)
+        cur = conn.cursor()
+        if report_week==1:
+            sql = ' select distinct employee_code from report a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
+                  ' and ((a.report_year= %s and a.report_week in %s) or (a.report_year= %s and a.report_week in %s)) ' \
+                  ' order by a.employee_code ' \
+                  % (int(report_year), int(report_week), int(report_year), (int(report_week)),int(report_year)-1,(50,51,52))
+            cur.execute(sql)
+            rows = cur.fetchall()
+            if rows:
+                for row in rows:
+                    employee_list.append(list(row))
+
+        if report_week==2:
+            sql = ' select distinct employee_code from report a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
+                  ' and ((a.report_year= %s and a.report_week in %s) or (a.report_year= %s and a.report_week in %s)) ' \
+                  ' order by a.employee_code ' \
+                  % (int(report_year), int(report_week), int(report_year), (int(report_week),int(report_week)-1),int(report_year)-1,(51,52))
+            cur.execute(sql)
+            rows = cur.fetchall()
+            if rows:
+                for row in rows:
+                    employee_list.append(list(row))
+
+        if report_week==3:
+            sql = ' select distinct employee_code from report a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
+                  ' and ((a.report_year= %s and a.report_week in %s) or (a.report_year= %s and a.report_week in %s)) ' \
+                  ' order by a.employee_code ' \
+                  % (int(report_year), int(report_week), int(report_year), (int(report_week),int(report_week)-1,int(report_week)-2),int(report_year)-1,(52))
+            cur.execute(sql)
+            rows = cur.fetchall()
+            if rows:
+                for row in rows:
+                    employee_list.append(list(row))
+
+        if report_week>=4:
+            sql = ' select distinct employee_code from report a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
+                  ' and a.report_year= %s and a.report_week in %s ' \
+                  ' order by a.employee_code ' \
+                  % (int(report_year), int(report_week), int(report_year), (int(report_week),int(report_week)-1,int(report_week)-2),int(report_week)-3)
+            cur.execute(sql)
+            rows = cur.fetchall()
+            if rows:
+                for row in rows:
+                    employee_list.append(list(row))
+
+        report_importance_list=[]
+        for employee in employee_list:
+            importance_average = calculate_importance_average(server, user, password, database, report_year,report_week, employee[0], 0)
+            add_list = [str(report_year), str(report_week), str(employee[2]), 0,0, importance_average]
+            report_importance_list.append(add_list)
+        insert_report_importance_from_report_have(server, user, password, database, report_importance_list)
+    except pymssql.Error as ex:
+        logger.error("dbException:" + str(ex))
+        raise ex
+    except Exception as ex:
+        logger.error("Call method insert_report_importance_from_report_donot_have() error!Can not query from table report!")
+        logger.error("Exception:" + str(ex))
+        raise ex
+    finally:
+        conn.close()
+
+
+
 
 
 def write_log():
@@ -613,7 +693,8 @@ if __name__=="__main__":
     logger.info("report_week:" + report_week)
     report_employee_list = get_report_employee_list(server, user, password, database,report_year,report_week)#从report表获取X年,X周,社员列表
     data_addto_report_importance = generate_appointed_importance_data(server, user, password, database, report_employee_list, report_year, report_week)#生成X年、X周、社员号X、重要度X、字数X的列表
-    insert_report_importance(server, user, password, database, data_addto_report_importance)# 插入X年、X月、社员号X、重要度、top报告长度到report_importance
+    insert_report_importance_from_report_have(server, user, password, database, data_addto_report_importance)# 插入X年、X月、社员号X、重要度、平均重要度、top报告长度到report_importance,这个方法指的是本周写了TOP报告的人走这个方法
+    insert_report_importance_from_report_donot_have(server, user, password, database)# 插入X年、X月、社员号X、重要度、平均重要度、top报告长度到report_importance,这个方法指的是本周没写TOP报告的人,但是前三周写过TOP报告,则应该在本周插入一条重要度为0,平均重要度为sum(前三周不为0的重要度)/不为0的数量,作为平均重要度的数据
     time_end = datetime.datetime.now()
     end = time.clock()
     logger.info("Program end,now time is:"+str(time_end))
