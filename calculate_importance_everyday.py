@@ -381,7 +381,8 @@ def calculate_importance_average(server, user, password, database, report_year,r
         cur = conn.cursor()
         if int(report_week) == 1:
             importance_list=[]
-            importance_list.append(currentWeek_importance_degree)#添加当周的重要度
+            if currentWeek_importance_degree:
+                importance_list.append(currentWeek_importance_degree)#添加当周的重要度
             sql = " select importance_degree from report_importance where report_year = %s and report_week = %s and employee_code = %s and importance_degree!=0 " \
                   % (int(report_year)-1, 50, employee_code)
             cur.execute(sql)
@@ -411,7 +412,8 @@ def calculate_importance_average(server, user, password, database, report_year,r
 
         if int(report_week) == 2:
             importance_list=[]
-            importance_list.append(currentWeek_importance_degree)  # 添加当周的重要度
+            if currentWeek_importance_degree:
+                importance_list.append(currentWeek_importance_degree)#添加当周的重要度
             sql = " select importance_degree from report_importance where report_year = %s and report_week = %s and employee_code = %s and importance_degree!=0 " \
                   % ( report_year,int(report_week)-1, employee_code)
             cur.execute(sql)
@@ -441,7 +443,8 @@ def calculate_importance_average(server, user, password, database, report_year,r
 
         if int(report_week) == 3:
             importance_list=[]
-            importance_list.append(currentWeek_importance_degree)  # 添加当周的重要度
+            if currentWeek_importance_degree:
+                importance_list.append(currentWeek_importance_degree)#添加当周的重要度
             sql = " select importance_degree from report_importance where report_year = %s and report_week = %s and employee_code = %s and importance_degree!=0 " \
                   % ( report_year,int(report_week)-1, employee_code)
             cur.execute(sql)
@@ -471,7 +474,8 @@ def calculate_importance_average(server, user, password, database, report_year,r
 
         if int(report_week) >=4 :
             importance_list=[]
-            importance_list.append(currentWeek_importance_degree)  # 添加当周的重要度
+            if currentWeek_importance_degree:
+                importance_list.append(currentWeek_importance_degree)#添加当周的重要度
             sql = " select importance_degree from report_importance where report_year = %s and report_week = %s and employee_code = %s  and importance_degree!=0 " \
                   % ( report_year,int(report_week)-1, employee_code)
             cur.execute(sql)
@@ -638,11 +642,12 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
                     employee_list.append(list(row))
 
         report_importance_list=[]
-        for employee in employee_list:
-            importance_average = calculate_importance_average(server, user, password, database, report_year,report_week, employee[0], 0)
-            add_list = [str(report_year), str(report_week), str(employee[2]), 0,0, importance_average]
-            report_importance_list.append(add_list)
-        insert_report_importance_from_report_have(server, user, password, database, report_importance_list)
+        if employee_list:
+            for employee in employee_list:
+                importance_average = calculate_importance_average(server, user, password, database, report_year,report_week, employee[0], 0)
+                add_list = [str(report_year), str(report_week), str(employee[2]), 0, 0, importance_average]
+                report_importance_list.append(add_list)
+            insert_report_importance_from_report_have(server, user, password, database, report_importance_list)
     except pymssql.Error as ex:
         logger.error("dbException:" + str(ex))
         raise ex
