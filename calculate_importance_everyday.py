@@ -609,6 +609,8 @@ if __name__=="__main__":
     report_year = str(current_year)#当前系统年
     report_week = str(current_week) #当前系统周
     read_dateConfig_file_set_year_week()#读配置文件设置report_year和report_week
+    logger.info("report_year:" + report_year)
+    logger.info("report_week:" + report_week)
     report_employee_list = get_report_employee_list(server, user, password, database,report_year,report_week)#从report表获取X年,X周,社员列表
     data_addto_report_importance = generate_appointed_importance_data(server, user, password, database, report_employee_list, report_year, report_week)#生成X年、X周、社员号X、重要度X、字数X的列表
     insert_report_importance(server, user, password, database, data_addto_report_importance)# 插入X年、X月、社员号X、重要度、top报告长度到report_importance
