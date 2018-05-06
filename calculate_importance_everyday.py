@@ -645,7 +645,7 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
         if employee_list:
             for employee in employee_list:
                 importance_average = calculate_importance_average(server, user, password, database, report_year,report_week, employee[0], 0)
-                add_list = [str(report_year), str(report_week), str(employee[2]), 0, 0, importance_average]
+                add_list = [str(report_year), str(report_week), str(employee[0]), 0, 0, importance_average]
                 report_importance_list.append(add_list)
             insert_report_importance_from_report_have(server, user, password, database, report_importance_list)
     except pymssql.Error as ex:
