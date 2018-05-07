@@ -407,7 +407,10 @@ def calculate_importance_average(server, user, password, database, report_year,r
             importance_list = [float(i) for i in importance_list]
             len_importance_list= len(importance_list)
             sum_importance = sum(importance_list)
-            importance_average = sum_importance/len_importance_list
+            if len_importance_list>0:
+                importance_average = sum_importance/len_importance_list
+            else:
+                importance_average = 0
             return importance_average
 
         if int(report_week) == 2:
@@ -438,7 +441,10 @@ def calculate_importance_average(server, user, password, database, report_year,r
             importance_list = [float(i) for i in importance_list]
             len_importance_list= len(importance_list)
             sum_importance = sum(importance_list)
-            importance_average = sum_importance/len_importance_list
+            if len_importance_list>0:
+                importance_average = sum_importance/len_importance_list
+            else:
+                importance_average = 0
             return importance_average
 
         if int(report_week) == 3:
@@ -469,7 +475,10 @@ def calculate_importance_average(server, user, password, database, report_year,r
             importance_list = [float(i) for i in importance_list]
             len_importance_list= len(importance_list)
             sum_importance = sum(importance_list)
-            importance_average = sum_importance/len_importance_list
+            if len_importance_list>0:
+                importance_average = sum_importance/len_importance_list
+            else:
+                importance_average = 0
             return importance_average
 
         if int(report_week) >=4 :
@@ -500,7 +509,10 @@ def calculate_importance_average(server, user, password, database, report_year,r
             importance_list = [float(i) for i in importance_list]
             len_importance_list= len(importance_list)
             sum_importance = sum(importance_list)
-            importance_average = sum_importance/len_importance_list
+            if len_importance_list>0:
+                importance_average = sum_importance/len_importance_list
+            else:
+                importance_average = 0
             return importance_average
 
     except pymssql.Error as ex:
@@ -583,25 +595,27 @@ def insert_report_importance_from_report_have(server, user, password, database, 
 
 def insert_report_importance_from_report_donot_have(server, user, password, database):
     '''
+    周日才执行这个方法
     :param server:服务器名称
     :param user:用户名
     :param password:密码
     :param database:数据库名
     :param datalist:插入到report_importance的列表
     '''
+    today = datetime.datetime.now()
+    # if today.weekday()==6:#周日是6,周一是0
     try:
         employee_list = []
         conn = pymssql.connect(server, user, password, database)
         cur = conn.cursor()
         if int(report_week)==1:
-            weeklist1 = '1'
-            weeklist2 = ('50', '51', '52')
-            weeklist2 = ','.join(weeklist2)
-            sql = ' select distinct employee_code from report a where not exists ' \
-                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
-                  ' and ((a.report_year= %s and a.report_week in (%s)) or (a.report_year= %s and a.report_week in (%s))) ' \
+            weeklist1 = ('50', '51', '52')
+            weeklist1 = ','.join(weeklist1)
+            sql = ' select distinct employee_code from report_importance a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
+                  ' and ((a.report_year= %s and a.report_week in (%s))) ' \
                   ' order by a.employee_code ' \
-                  % (report_year, report_week, report_year, weeklist1, str(int(report_year)-1), weeklist2)
+                  % (report_year, report_week, str(int(report_year)-1), weeklist1)
             cur.execute(sql)
             rows = cur.fetchall()
             if rows:
@@ -609,12 +623,11 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
                     employee_list.append(list(row))
 
         if int(report_week)==2:
-            weeklist1 = ('1', '2')
-            weeklist1 = ','.join(weeklist1)
+            weeklist1 = '1'
             weeklist2 = ('51','52')
             weeklist2 = ','.join(weeklist2)
-            sql = ' select distinct employee_code from report a where not exists ' \
-                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
+            sql = ' select distinct employee_code from report_importance a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
                   ' and ((a.report_year= %s and a.report_week in (%s)) or (a.report_year= %s and a.report_week in (%s))) ' \
                   ' order by a.employee_code ' \
                   % (report_year, report_week, report_year, weeklist1, str(int(report_year)-1), weeklist2)
@@ -625,11 +638,11 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
                     employee_list.append(list(row))
 
         if int(report_week)==3:
-            weeklist1 = ('1', '2', '3')
+            weeklist1 = ('1', '2')
             weeklist1 = ','.join(weeklist1)
             weeklist2 = '52'
-            sql = ' select distinct employee_code from report a where not exists ' \
-                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
+            sql = ' select distinct employee_code from report_importance a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
                   ' and ((a.report_year= %s and a.report_week in (%s)) or (a.report_year= %s and a.report_week in (%s))) ' \
                   ' order by a.employee_code ' \
                   % (report_year, report_week, report_year, weeklist1 ,str(int(report_year)-1), weeklist2)
@@ -640,10 +653,10 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
                     employee_list.append(list(row))
 
         if int(report_week)>=4:
-            weeklist = (report_week, str(int(report_week)-1),str(int(report_week)-2),str(int(report_week)-3))
+            weeklist = (str(int(report_week)-1),str(int(report_week)-2),str(int(report_week)-3))
             weeklist = ','.join(weeklist)
-            sql = ' select distinct employee_code from report a where not exists ' \
-                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week= %s ) ' \
+            sql = ' select distinct employee_code from report_importance a where not exists ' \
+                  ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
                   ' and a.report_year= %s and a.report_week in (%s) ' \
                   ' order by a.employee_code ' \
                   % (report_year, report_week, report_year, weeklist)
