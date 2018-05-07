@@ -539,8 +539,9 @@ def generate_appointed_importance_data(server, user, password, database, employe
             for employee in employee_list:
                 employee_report = read_report_from_database(server, user, password, database, report_year,report_week,employee[2])# 社员TOP报告内容
                 result = calculate_importance(employee_report)
-                importance_degree = str(result[0])
+                importance_degree = str(round(result[0]))
                 importance_average = calculate_importance_average(server, user, password, database, report_year,report_week,employee[2],importance_degree)
+                importance_average = round(importance_average)
                 length_member_topReport = str(result[1])
                 add_list = [str(report_year), str(report_week), str(employee[2]), importance_degree, length_member_topReport, importance_average]
                 report_importance_list.append(add_list)
@@ -674,6 +675,7 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
         if employee_list:
             for employee in employee_list:
                 importance_average = calculate_importance_average(server, user, password, database, report_year,report_week, employee[0], 0)
+                importance_average = round(importance_average)
                 add_list = [str(report_year), str(report_week), str(employee[0]), 0, 0, importance_average]
                 report_importance_list.append(add_list)
             insert_report_importance_from_report_have(server, user, password, database, report_importance_list)
@@ -686,9 +688,6 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
         raise ex
     finally:
         conn.close()
-
-
-
 
 
 def write_log():
