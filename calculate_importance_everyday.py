@@ -614,6 +614,7 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
             sql = ' select distinct employee_code from report_importance a where not exists ' \
                   ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
                   ' and ((a.report_year= %s and a.report_week in (%s))) ' \
+                  ' and a.importance_degree!=0 ' \
                   ' order by a.employee_code ' \
                   % (report_year, report_week, str(int(report_year)-1), weeklist1)
             cur.execute(sql)
@@ -629,6 +630,7 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
             sql = ' select distinct employee_code from report_importance a where not exists ' \
                   ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
                   ' and ((a.report_year= %s and a.report_week in (%s)) or (a.report_year= %s and a.report_week in (%s))) ' \
+                  ' and a.importance_degree!=0 ' \
                   ' order by a.employee_code ' \
                   % (report_year, report_week, report_year, weeklist1, str(int(report_year)-1), weeklist2)
             cur.execute(sql)
@@ -644,6 +646,7 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
             sql = ' select distinct employee_code from report_importance a where not exists ' \
                   ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
                   ' and ((a.report_year= %s and a.report_week in (%s)) or (a.report_year= %s and a.report_week in (%s))) ' \
+                  ' and a.importance_degree!=0 ' \
                   ' order by a.employee_code ' \
                   % (report_year, report_week, report_year, weeklist1 ,str(int(report_year)-1), weeklist2)
             cur.execute(sql)
@@ -658,6 +661,7 @@ def insert_report_importance_from_report_donot_have(server, user, password, data
             sql = ' select distinct employee_code from report_importance a where not exists ' \
                   ' (select 1 from report b where a.employee_code=b.employee_code and b.report_year = %s and b.report_week = %s ) ' \
                   ' and a.report_year= %s and a.report_week in (%s) ' \
+                  ' and a.importance_degree!=0 ' \
                   ' order by a.employee_code ' \
                   % (report_year, report_week, report_year, weeklist)
             cur.execute(sql)
