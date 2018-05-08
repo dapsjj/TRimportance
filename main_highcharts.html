@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<link rel="stylesheet" href="${rc.contextPath}/statics/css/bootstrap.min.css">
+<link rel="stylesheet" href="${rc.contextPath}/statics/css/font-awesome.min.css">
+<link rel="stylesheet" href="${rc.contextPath}/statics/css/jquery-ui.css">
+<link rel="stylesheet" href="${rc.contextPath}/statics/css/toastr.min.css">
+<link rel="shortcut icon" href="#" />
+<style type="text/css">
+			*{
+				margin: 0;
+				padding: 0;
+			}
+			html{
+				widht: 100%;
+				height: 100%;
+			}
+			body{
+				widht: 100%;
+				height: 100%;
+			}
+			header{
+				margin: 5px 5px;
+				height: 60px;
+				padding: 3px;
+				border: 1px solid #66a5a4a6;
+				width: 60%;	
+				margin: 0 auto;
+				background: #E0FFFF;
+			}
+			header p{
+				font-family: Microsoft YaHei;
+				line-height: 60px;
+				text-align: center;
+				font-size:30px;
+			}
+			#chartDiv{
+				width:920px; 
+				height:460px; 
+				margin: 0 auto;
+				
+			}
+		</style>
+<script src="${rc.contextPath}/statics/libs/jquery.min.js"></script>
+<script src="${rc.contextPath}/statics/libs/bootstrap.min.js"></script>
+<script src="${rc.contextPath}/statics/libs/jquery-ui.js"></script>
+<script src="${rc.contextPath}/statics/libs/toastr.min.js"></script>
+<script src="${rc.contextPath}/statics/libs/highcharts.js"></script>
+<script src="${rc.contextPath}/statics/libs/highcharts-more.js"></script>
+<script src="${rc.contextPath}/statics/libs/exporting.js"></script>
+<script type="text/javascript">
+	/**
+	*getParameterByName()
+	*获取参数中的参数query string: ?foo=lorem&bar=&baz
+	*var foo = getParameterByName('foo'); // "lorem"
+	*var bar = getParameterByName('bar'); // "" 
+	*var baz = getParameterByName('baz'); // "" 
+	*var qux = getParameterByName('qux'); // null
+	*/
+	function getParameterByName(name, url) {
+	 if (!url) url = window.location.href;
+	 name = name.replace(/[\[\]]/g, "\\$&");
+	 var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+	     results = regex.exec(url);
+	 if (!results) return null;
+	 if (!results[2]) return '';
+	 return decodeURIComponent(results[2].replace(/\+/g, " "));
+	}
+
+  $(document).ready(function(){
+	  /*
+	  *获取url中的reportYear,reportWeek,employeeCode
+	  */
+	  var urlReportYear = getParameterByName('reportYear'); 
+	  urlReportYear = $.trim(urlReportYear); 
+	  var urlReportWeek = getParameterByName('reportWeek'); 
+	  if (urlReportWeek<10){
+		  urlReportWeek = '0'+urlReportWeek;
+	  }
+	  urlReportWeek = $.trim(urlReportWeek); 
+	  var urlEmployeeCode = getParameterByName('employeeCode');
+	  urlEmployeeCode = $.trim(urlEmployeeCode); 
+	  
+	  $('#chartDiv').hide();//页面初始化的时候隐藏echarts的div
+	  var toastrOptions = {
+			   //是否显示关闭按钮
+			   closeButton: true,
+			   //是否使用debug模式
+			   debug: false,
+			   //弹出窗的位置
+			   positionClass: 'toast-top-center',
+			   onclick: null,
+			   //显示的动画时间
+			   showDuration: 300,
+			   //消失的动画时间
+			   hideDuration: 1000,
+			   //展现时间
+			   timeOut: 3000,
+			   //加长展示时间
+			   extendedTimeOut: 1000,
+			   //显示时的动画缓冲方式
+			   showEasing: 'swing',
+			   //消失时的动画缓冲方式
+			   hideEasing: 'linear',
+			   //显示时的动画方式
+			   showMethod: 'fadeIn',
+			   //消失时的动画方式
+			   hideMethod: 'fadeOut'
+			  };
+			  //重写默认,如不重写则使用默认
+			  toastr.options = toastrOptions;
+		  if (null == reportYear || reportYear == ''){
+			  toastr.info('年は空値です!');
+      	  	  return;
+		  }
+		  if (null == reportWeek || reportWeek == ''){
+			  toastr.info('週は空値です!');
+      	  	  return;
+		  }
+		  if (null == employeeCode || employeeCode == ''){
+			  toastr.info('社員CDは空値です!');
+      	  	  return;
+		  }
+          if (!checkNumber(reportYear)){
+        		toastr.info('年は数字ではありません!');
+        	  	return;
+          }
+          if (!checkNumber(reportWeek)){
+      			toastr.info('週は数字ではありません!');
+      	  		return;
+          }
+          if (!checkNumber(employeeCode)){
+        		toastr.info('社員CDは数字ではありません!');
+        	  	return;
+          }
+          var importanceList = [];
+          var weekList = [];//存放'年+周'格式数据,用于X轴显示
+		  var params = {};  
+		  params.employeeCode = employeeCode; 
+		  $.ajax({
+		        type: 'POST', 
+		        url: 'queryEmployeeShowECharts',
+		        data: params,  
+		        async: true,
+		        dataType: 'json',//预期服务器返回的数据类型
+//  		    contentType: "application/json; charset=utf-8",//GET请求 server.xml需要 加<Connector connectionTimeout="20000" port="8080" protocol="HTTP/1.1" redirectPort="8443" URIEncoding="UTF-8"/>
+				contentType: "application/x-www-form-urlencoded; charset=utf-8",//POST请求
+		        success: function (data) {
+		                if (data.length>0){
+		                	var data_length = data.length;
+		                	var urlYearWeek = urlReportYear+urlReportWeek;
+	             	   		var startYear = data[0].reportYear;
+	             	   		var endYear = data[data.length-1].reportYear;
+	             	   		var startWeek = data[0].reportWeek;
+	             	   		var endWeek = data[data.length-1].reportWeek;
+	             	   		var employeeCode = data[0].employeeCode;
+	             	   		var employeeName = data[0].employeeName;
+	             	   	while (startYear != endYear || startYear != endWeek) {
+	             	   	  var foundObjectIndex = data.findIndex(function (_ref) {
+	             	   	    var reportYear = _ref.reportYear,
+	             	   	        reportWeek = _ref.reportWeek;
+	             	   	    return reportYear == startYear && reportWeek == startWeek;
+	             	   	  });
+	             	   	  if (foundObjectIndex == -1) {
+	             	   	    data.push({
+	             	   	      reportYear: startYear,
+	             	   	      reportWeek: startWeek,
+	             	   	      employeeCode: employeeCode,
+	             	   	      employeeName: employeeName,
+	             	   	      importanceDegree: 0
+	             	   	    });
+	             	   	  }
+	             	   	  startWeek++;
+	             	   	  if (startWeek == 53) {
+	             	   		    startWeek = 1;
+	             	        	startYear++;
+	             	   	  }
+	             	   	}
+
+	             	   	data.sort(function (a, b) {
+	             	   	  if (a.reportYear !== b.reportYear) return a.reportYear - b.reportYear;
+	             	   	  if (a.reportWeek != b.reportWeek) return a.reportWeek - b.reportWeek;
+	             	   	  return b.importanceDegree - a.importanceDegree;
+	             	   	});
+	             	   	console.info(data);
+	             	   		
+		                	for(var i=0;i<data.length;i++){  
+		                		importanceList.push(data[i].importanceDegree);
+		                		if(data[i].reportWeek < 10){
+		                		weekList.push(String(data[i].reportYear)+'0'+String(data[i].reportWeek))
+		                      }else{
+		                    	  weekList.push(String(data[i].reportYear)+String(data[i].reportWeek))
+		                      }
+                    	   }
+		                   var index_year_week = indexOf(weekList,urlYearWeek);
+		                   var min = index_year_week-5 ;
+	             	   	   var max = index_year_week;
+//                     	   data.map(function(el,i){
+//                                data[i]=({year:el.reportYear,
+//                             	   week:el.reportWeek,
+//                             	   employeeCode:el.employeeCode,
+//                             	   employeeName:el.employeeName,
+//                             	   importanceDegree:el.importanceDegree}); 
+//                                   })
+                           var chart = null;
+// 	                       $('#chartDiv').highcharts({
+							chart = Highcharts.chart('chartDiv', {
+	                           chart: {
+// 	                               type: 'line',
+// 	                               plotBorderWidth: 1,
+	                               zoomType: 'xy'
+	                           },
+	                           title: {
+	                               text: '重要度'
+	                           },
+	                           xAxis: {
+	                        	   minRange: 1,
+	                        	   categories: weekList
+	                           },
+	                           yAxis: {
+	                        	   title: {
+	                        		   text: ''
+	                        		}
+	                           },
+	                           legend: {
+	                        	    enabled: true //是否显示系列名称
+	                        	  },
+	                           tooltip: {
+	                               useHTML: true,
+	                               headerFormat: '<table>',
+	                               pointFormat: '年:{point.year}<br/>'+
+	                               '週:{point.week}<br/>' +
+	                               '重要度:{point.importanceDegree}<br/>' +
+	                               '社員CD:{point.employeeCode}<br/>' +
+	                               '社員名:{point.employeeName}',
+	                               followPointer: true
+	                           },
+	                           plotOptions: {
+	                        	   line: {
+	                        		      marker: {
+	                        		        radius: 2
+	                        		      },
+	                        		      dataLabels: {
+	                        		        enabled: true
+	                        		      },
+	                        		      lineWidth: 1,
+	                        		      states: {
+	                        		        hover: {
+	                        		          lineWidth: 1
+	                        		        }
+	                        		      },
+	                        		      threshold: null
+	                        		    }
+	                           },
+	                           series: [
+								{
+									type: 'line',
+								    data: importanceList,
+								    name : data[0].employeeName,
+								    connectNulls:true //data中有null值是否断开,true代表不断开,false代表断开
+								}
+	                          ],
+	                          exporting: {
+	                        	    buttons: {
+	                        	      moveRight: {
+	                        	        text: '>>',
+	                        	        onclick: function(){
+	                        	          var canShift = max < data.length-1
+	                        	          max = canShift ? max + 1 : max;
+	                        	          min = canShift ? min + 1 : min;
+	                        	          chart.xAxis[0].setExtremes(min, max);
+	                        	        }
+	                        	      },
+	                        	      increasePeriod: {
+	                        	        text: '+',
+	                        	        onclick: function() {
+	                        	          max = max < data.length-1 ? max + 1 : max;
+	                        	          chart.xAxis[0].setExtremes(min, max);
+	                        	        }
+	                        	      },
+	                        	      decreasePeriod: {
+	                        	        text: '-',
+	                        	        onclick: function() {
+	                        	          max = max > min ? max - 1 : max
+	                        	          chart.xAxis[0].setExtremes(min, max);
+	                        	        }
+	                        	      },
+	                        	      moveLeft: {
+	                        	        text: '<<',
+	                        	        onclick: function() {
+	                        	          var canShift = min > 0
+	                        	          min = canShift ? min - 1 : min;
+	                        	          max = canShift ? max -1 : max;
+	                        	          chart.xAxis[0].setExtremes(min, max);
+	                        	        }
+	                        	      }
+	                        	    }
+	                        	  }
+	                       });
+							$.each(weekList, function(index, week){
+								  $('<option>', {
+								    value: index,
+								    text: week
+								  }).appendTo($('select'))
+								});
+							
+							$('select').on('change', function(){
+								  min = parseInt($('#start').val());
+								  max = parseInt($('#end').val());
+								  if(min > max){
+								     max = min;
+								     $('#start').val(min);
+								     $('#end').val(max);
+								  }
+								  chart.xAxis[0].setExtremes(min, max);
+								});
+							
+							$('#start').val(min);
+							$('#end').val(max).trigger('change');
+						    chart.showResetZoom();//显示重置按钮
+	                        $('#chartDiv').show();
+	                }
+	                else{
+	                	$('#chartDiv').hide();
+	                }
+		        },
+		        error:function(resp){
+		        	
+		        }
+		   });
+  });
+  
+ 
+	//验证字符串是否是数字
+	function checkNumber(theObj) {
+		var reg = /^[0-9]*$/;
+		if (reg.test(theObj)) {
+			return true;
+		}
+			return false;
+	}
+	
+	function indexOf(arr, str){
+	    // 如果可以的话，调用原生方法
+	    if(arr && arr.indexOf){
+	        return arr.indexOf(str);
+	    }
+	    for(var i = 0; i < len; i++){
+	        // 定位该元素位置
+	        if(arr[i] == str){
+	            return i;
+	        }
+	    }
+	    // 数组中不存在该元素
+	    return -1;
+	}
+
+ </script>
+</head>
+<body>
+  		<header>
+			<p>検索</p>
+		</header>
+		<div id="chartDiv">
+		</div>
+		<div id="rangeSelector">
+			<select id="start"></select>
+			<select id="end"></select>
+		</div>
+</body>
+</html>
