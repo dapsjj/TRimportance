@@ -32,10 +32,10 @@ MULTIBYTE_MARK = set([
     "\r\n","\t","\n",
     "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
     "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
-    "br","BR"
+    "br","BR","です","ます"
     ])
 
-
+'''
 def cmp_noun_list(data):
     """
     和文テキストを受け取り、複合語（空白区切りの単名詞）のリストを返す
@@ -47,7 +47,7 @@ def cmp_noun_list(data):
     cmp_nouns = mecab.parse(data)
     cmp_nouns = cmp_nouns.split(" ")
     for every_keyword in cmp_nouns:
-        if ((every_keyword  and (every_keyword in MULTIBYTE_MARK or every_keyword in JP_HIRA or every_keyword in JP_KATA)) or (every_keyword and len(every_keyword.strip())==1)):
+        if ((every_keyword and (every_keyword in MULTIBYTE_MARK or every_keyword in JP_HIRA or every_keyword in JP_KATA)) or (every_keyword and len(every_keyword.strip()) == 1 and every_keyword in JP_HIRA and every_keyword in JP_KATA)):
             deltxt_list.append(every_keyword)
         else:
             savetxt_list.append(every_keyword)
@@ -55,6 +55,97 @@ def cmp_noun_list(data):
     terms = []
     _increase(cmp_nouns, terms)
     return cmp_nouns
+'''
+
+def cmp_noun_list(data):
+    """
+    和文テキストを受け取り、複合語（空白区切りの単名詞）のリストを返す
+    """
+    cmp_nouns = []
+    # 行レベルのループ
+    for morph in data.split("\n"):
+        morph.rstrip()
+        terms = []
+        if len(morph) == 0:
+            continue
+        morph = morph.replace(",", " ")
+        morph = morph.replace(".", " ")
+        morph = morph.replace("(", " ")
+        morph = morph.replace(")", " ")
+        morph = morph.replace(";", " ")
+        morph = morph.replace("!", " ")
+        morph = morph.replace("[", " ")
+        morph = morph.replace("]", " ")
+        morph = morph.replace("?", " ")
+        morph = morph.replace("/", " ")
+        is_kata = 0
+        kata = ""
+        while len(morph) > 1:
+            is_stopword = 0
+            # 英語
+            eng_word = re.match(r"[a-zA-Z0-9_]+", morph)
+            if eng_word is not None:
+                if is_kata:
+                    if len(kata) > 1:
+                        terms.append(kata)
+                    kata = ""
+                    is_kata = 0
+                morph = morph[len(eng_word.group(0)):]
+                terms.append(eng_word.group(0))
+                _increase(cmp_nouns, terms)
+                is_stopword = 1
+            if not len(morph) > 1:
+                continue
+            # マルチバイト記号
+            if morph[0] in MULTIBYTE_MARK:
+                if is_kata:
+                    if len(kata) > 1:
+                        terms.append(kata)
+                    kata = ""
+                    is_kata = 0
+                _increase(cmp_nouns, terms)
+                is_stopword = 1
+            # ひらがな
+            if morph[0] in JP_HIRA:
+                if is_kata:
+                    if len(kata) > 1:
+                        terms.append(kata)
+                    kata = ""
+                    is_kata = 0
+                _increase(cmp_nouns, terms)
+                is_stopword = 1
+            # カタカナ
+            if morph[0] in JP_KATA:
+                kata += morph[0]
+                is_kata = 1
+            if not is_stopword:
+                if not is_kata:
+                    terms.append(morph[0])
+            morph = morph[1:]
+    # 行の末尾の処理
+    _increase(cmp_nouns, terms)
+    return cmp_nouns
+
+
+def modify_agglutinative_lang(data):
+    """
+    半角スペースで区切られた単名詞を膠着言語（日本語等）向けに成形する
+    """
+    data_disp = ""
+    eng = 0
+    eng_pre = 0
+    for noun in data.split(" "):
+        if re.match("[A-Z|a-z]+$", noun):
+            eng = 1
+        else:
+            eng = 0
+        # 前後ともアルファベットなら半角空白空け、それ以外なら区切りなしで連結
+        if eng and eng_pre:
+            data_disp = data_disp + " " + noun
+        else:
+            data_disp = data_disp + noun
+        eng_pre = eng
+    return data_disp
 
 
 def _increase(cmp_nouns, terms):
@@ -238,6 +329,7 @@ def calculate_importance(member_txt):
     return totalImportance_member,length_member_topReport_content
 '''
 
+"""
 def calculate_importance_to_excel(member_txt,year,week,employee_code,file_path):
     '''
     :param member_txt: 文章
@@ -272,7 +364,7 @@ def calculate_importance_to_excel(member_txt,year,week,employee_code,file_path):
         totalImportance_member += value
         key_words_list_memeber.append(cmp_noun)
     excel.save(file_path)
-
+"""
 
 def get_year_week_from_Mst_date(server, user, password, database, current_date):
     '''
@@ -450,7 +542,7 @@ def calculate_importance_of_everyword_output_to_excel(server, user, password, da
                         worksheet.write(current_row, 0, label=report_year)
                         worksheet.write(current_row, 1, label=report_week)
                         worksheet.write(current_row, 2, label=employee[0])
-                        worksheet.write(current_row, 3, label=cmp_noun)
+                        worksheet.write(current_row, 3, label=modify_agglutinative_lang(cmp_noun))
                         worksheet.write(current_row, 4, label=value)
                         current_row += 1
                         totalImportance_member += value
