@@ -63,7 +63,7 @@ def cmp_noun_list(data):
     for morph in data.split("\n"):
         morph.rstrip()
         terms = []
-        if len(morph) == 0:
+        if not morph:
             continue
         morph = morph.replace(",", " ")
         morph = morph.replace(".", " ")
