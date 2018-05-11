@@ -14,22 +14,15 @@ IGNORE_WORDS = set([])  # 重要度計算外とする語
 JP_HIRA = set([chr(i) for i in range(12353, 12436)])
 # カタカナ
 JP_KATA = set([chr(i) for i in range(12449, 12532+1)])
-# MULTIBYTE_MARK = set([
-#     "", "、", "。", "”", "“", "，", "《", "》", "：", "（", "）", "；",
-#     "〈", "〉", "「", "」", "『", "』", "【", "】", "〔", "〕", "？", "！",
-#     "ー", "-", "ー", "…", "‘", "’", "／",
-#     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "０", "１", "２", "３",
-#     "４", "５", "６", "７", "８", "９",
-#     " ",
-#     ])
-
+#特殊符号
 MULTIBYTE_MARK = set([
-     "、", "。", "”", "“", "，", "《", "》", "：", "（", "）", "(",")","；",".","/","・","～","%","％","■","~","→",
-    "〈", "〉", "「", "」", "『", "』", "【", "】", "〔", "〕", "？", "！","+","-","*","÷",
-    "ー", "-", "ー", "…", "‘", "’", "／","/","/>","<",">","><","/><",
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "０", "１", "２", "３",
-    "４", "５", "６", "７", "８", "９",
-    "①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"
+     "、", "。", "”", "“", "，", "《", "》", "：", "（", "）", "(",")","；",".","/","・","～","%","％","~","■","●","◆","↑","↓","←","→","×","※","►","▲","▼","‣","·","∶",
+    "〈", "〉", "「", "」", "『", "』", "【", "】", "〔", "〕", "？", "！","+","-","*","×","÷","±",
+    "ー", "-", "…","……", "‘", "’", "／","/","/>","<",">","><",
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "０", "１", "２", "３","４", "５", "６", "７", "８", "９",
+    "①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫",
+    "\r\n","\t","\n"
     ])
 
 
@@ -38,11 +31,11 @@ def cmp_noun_list(data):
     和文テキストを受け取り、複合語（空白区切りの単名詞）のリストを返す
     """
     cmp_nouns = []
-    terms = []
     # 行レベルのループ
     for morph in data.split("\n"):
         morph.rstrip()
-        if not morph:
+        terms = []
+        if len(morph) == 0:
             continue
         morph = morph.replace(",", " ")
         morph = morph.replace(".", " ")
@@ -54,11 +47,9 @@ def cmp_noun_list(data):
         morph = morph.replace("]", " ")
         morph = morph.replace("?", " ")
         morph = morph.replace("/", " ")
-        is_stopword = 0
         is_kata = 0
         kata = ""
-        # 文字レベルのループ
-        while morph:
+        while len(morph) > 1:
             is_stopword = 0
             # 英語
             eng_word = re.match(r"[a-zA-Z0-9_]+", morph)
@@ -70,7 +61,9 @@ def cmp_noun_list(data):
                     is_kata = 0
                 morph = morph[len(eng_word.group(0)):]
                 terms.append(eng_word.group(0))
-            if not morph:
+                _increase(cmp_nouns, terms)
+                is_stopword = 1
+            if not len(morph) > 1:
                 continue
             # マルチバイト記号
             if morph[0] in MULTIBYTE_MARK:
@@ -98,13 +91,9 @@ def cmp_noun_list(data):
                 if not is_kata:
                     terms.append(morph[0])
             morph = morph[1:]
-        if not is_stopword:
-            terms.append(kata)
-            _increase(cmp_nouns, terms)
     # 行の末尾の処理
     _increase(cmp_nouns, terms)
-    cmp_nouns_cut_uni = [x for x in cmp_nouns if len(x) > 1]
-    return cmp_nouns_cut_uni
+    return cmp_nouns
 
 
 
@@ -143,7 +132,7 @@ def _increase(cmp_nouns, terms):
     """
     専門用語リストへ、整形して追加するサブルーチン
     """
-    if terms:
+    if len(terms) > 1:
         cmp_noun = ' '.join(terms)
         cmp_nouns.append(cmp_noun)
     del terms[:]
@@ -208,11 +197,36 @@ def score_lr(frequency, ignore_words=None, average_rate=1,
 
 
 def _score_lr_dict(frequency, ignore_words, average_rate=1, lr_mode=1):
-    """
-    LRによる重要度計算を行う（学習なし）
-    """
-    noun_importance = {}  # 「専門用語」をキー、値を「重要度」
-    stat = _stat_lr(frequency, ignore_words, lr_mode)[0]
+    # 「専門用語」をキーに、値を「重要度」にしたディクショナリ
+    noun_importance = {}
+    stat = {}  # 単名詞ごとの連接情報
+    # 専門用語ごとにループ
+    for cmp_noun in frequency.keys():
+        if not cmp_noun:
+            continue
+        org_nouns = cmp_noun.split(" ")
+        nouns = []
+        # 数値及び指定の語を重要度計算から除外
+        for noun in org_nouns:
+            if ignore_words:
+                if noun in ignore_words:
+                    continue
+            elif re.match(r"[\d\.\,]+$", noun):
+                continue
+            nouns.append(noun)
+        # 複合語の場合、連接語の情報をディクショナリに入れる
+        if len(nouns) > 1:
+            for i in range(0, len(nouns)-1):
+                if not nouns[i] in stat:
+                    stat[nouns[i]] = [0, 0]
+                if not nouns[i+1] in stat:
+                    stat[nouns[i+1]] = [0, 0]
+                if lr_mode == 1:  # 連接語の”延べ数”をとる場合
+                    stat[nouns[i]][0] += frequency[cmp_noun]
+                    stat[nouns[i+1]][1] += frequency[cmp_noun]
+                elif lr_mode == 2:   # 連接語の”異なり数”をとる場合
+                    stat[nouns[i]][0] += 1
+                    stat[nouns[i+1]][1] += 1
     for cmp_noun in frequency.keys():
         importance = 1  # 専門用語全体の重要度
         count = 0  # ループカウンター（専門用語中の単名詞数をカウント）
@@ -276,76 +290,6 @@ def store_lr(frequency, dbm=None):
                 stat[nouns[i]] = "\t".join(value_0)
                 stat[nouns[i+1]] = "\t".join(value_1)
 
-
-def _stat_lr(frequency, ignore_words, lr_mode=1, pp_mode=0):
-    """
-    LRの統計情報を得る
-    """
-    stat = {}  # 単名詞ごとの連接情報
-    pre = {}
-    post = {}
-    # 専門用語ごとにループ
-    for cmp_noun in frequency.keys():
-        if not cmp_noun:
-            continue
-        org_nouns = cmp_noun.split(" ")
-        nouns = []
-        # 数値及び指定の語を重要度計算から除外
-        for noun in org_nouns:
-            if ignore_words:
-                if noun in ignore_words:
-                    continue
-            elif re.match(r"[\d\.\,]+$", noun):
-                continue
-            nouns.append(noun)
-        if len(nouns) > 1:
-            for i in range(0, len(nouns)-1):
-                if not nouns[i] in stat:
-                    stat[nouns[i]] = [0, 0]
-                if not nouns[i+1] in stat:
-                    stat[nouns[i+1]] = [0, 0]
-                if lr_mode == 2:   # 連接語の”異なり数”をとる場合
-                    stat[nouns[i]][0] += 1
-                    stat[nouns[i+1]][1] += 1
-                else:  # 連接語の”延べ数”をとる場合
-                    stat[nouns[i]][0] += frequency[cmp_noun]
-                    stat[nouns[i+1]][1] += frequency[cmp_noun]
-                if pp_mode == 1:
-                    if nouns[i+1] not in pre:
-                        pre[nouns[i+1]] = {}
-                    if nouns[i] not in pre[nouns[i+1]]:
-                        pre[nouns[i+1]][nouns[i]] = 1
-                    else:
-                        pre[nouns[i+1]][nouns[i]] += 1
-                    if nouns[i] not in post:
-                        post[nouns[i]] = {}
-                    if nouns[i+1] not in post[nouns[i]]:
-                        post[nouns[i]][nouns[i+1]] = 1
-                    else:
-                        post[nouns[i]][nouns[i+1]] += 1
-    return(stat, pre, post)
-
-
-def _entropy(stat, pre, post):
-    """
-    単名詞のエントロピー計算を行う
-    """
-    stat_entropy = {}
-    for noun1 in stat:
-        entropy = 0
-        work = 0
-        # 単名詞のエントロピーを求める（前に連接するケース）
-        if noun1 in pre:
-            for noun2 in pre[noun1]:
-                work = pre[noun1][noun2] / (stat[noun1][1] + 1)
-                entropy -= work * log(work)
-        # 単名詞のエントロピーを求める（後に連接するケース）
-        if noun1 in post:
-            for noun2 in post[noun1]:
-                work = post[noun1][noun2] / (stat[noun1][0] + 1)
-                entropy -= work * log(work)
-        stat_entropy[noun1] = entropy
-    return stat_entropy
 
 def _score_lr_dbm(frequency, ignore_words=None, average_rate=1, lr_mode=1,
                   dbm=None):
