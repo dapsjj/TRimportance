@@ -22,11 +22,13 @@ JP_HIRA = set([chr(i) for i in range(12353, 12436)])
 # カタカナ
 JP_KATA = set([chr(i) for i in range(12449, 12532+1)])
 #要忽略的字符
+# "ー"特殊
 MULTIBYTE_MARK = set([
     "、", ",", "，", "。","．", "”", "“", "《", "》", "：", "（", "）", "(",")","；",".","・","～","`","%","％","$","￥","~",
     "■","●","◆","×","※","►","▲","▼","‣","·","∶",":","‐",
     "〈", "〉", "「", "」", "『", "』", "【", "】", "〔", "〕", "?","？","!","！","+","-","*","×","÷","±",
-    "ー", "…", "‘", "’", "／","/","<",">","><","[","]","#","＃","゛","゜",
+    # "ー",
+    "…", "‘", "’", "／","/","<",">","><","[","]","#","＃","゛","゜",
     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
     "０", "１", "２", "３","４", "５", "６", "７", "８", "９",
     "①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳",
@@ -53,10 +55,11 @@ MULTIBYTE_MARK = set([
     "↠","↡","↢","↣","↤","↤","↥","↦","↧","↨","⇄","⇅","⇆","⇇","⇈","⇉","⇊","⇋","⇌","⇍","⇎","⇏","⇐","⇑","⇒",
     "⇓","⇔","⇖","⇗","⇘","⇙","⇜","↩","↪","↫","↬","↭","↮","↯","↰","↱","↲","↳","↴","↵","↶","↷","↸","↹","☇",
     "☈","↼","↽","↾","↿","⇀","⇁","⇂","⇃","⇞","⇟","⇠","⇡","⇢","⇣","⇤","⇥","⇦","⇧","⇨","⇩","⇪","↺","↻","⇚","⇛","♐"
+    # "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+    # "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
     ])
 
-
-
+'''
 def cmp_noun_list(data):
     """
     和文テキストを受け取り、複合語（空白区切りの単名詞）のリストを返す
@@ -123,6 +126,36 @@ def cmp_noun_list(data):
                     terms.append(morph[0])
             morph = morph[1:]
     # 行の末尾の処理
+    _increase(cmp_nouns, terms)
+    return cmp_nouns
+'''
+
+def cmp_noun_list(data):
+    """
+    和文テキストを受け取り、複合語（空白区切りの単名詞）のリストを返す
+    """
+    savetxt_list=[]
+    mecab = MeCab.Tagger("-Ochasen") #有词性标注的
+    # mecab = MeCab.Tagger("-Owakati")  # 没有词性标注的
+    data = data.replace("<br/>", "")
+    data = data.replace("<br>", "")
+    cmp_nouns = mecab.parse(data)
+    every_row = cmp_nouns.split('\n')
+    # for every_attribute_line in every_row:
+    #     every_attribute_array = every_attribute_line.split('\t')
+    #     for every_attribute in every_attribute_array:
+    #         if every_attribute.find('名詞') != -1:#能在这个属性中找打名词
+    #             savetxt_list.append(every_attribute_array[0])
+    #             break
+    for every_attribute_line in every_row:
+        every_attribute_array = every_attribute_line.split('\t')
+        if len(every_attribute_array)>3:
+            if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找打名词
+                if (every_attribute_array[0] and len(every_attribute_array[0])>1 and not(every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK ):
+                    savetxt_list.append(every_attribute_array[0])
+    savetxt_list = [' '.join(i) for i in savetxt_list]
+    cmp_nouns = savetxt_list
+    terms = []
     _increase(cmp_nouns, terms)
     return cmp_nouns
 
@@ -507,7 +540,7 @@ def calculate_importance_of_everyword_output_to_excel(server, user, password, da
         myweek = report_week
         if int(myweek) <10:
             myweek = '0'+myweek
-        fileName = report_year + myweek + '.xlsx'
+        fileName = report_year + myweek + '.xls'
         workbook = xlwt.Workbook(encoding='UTF-8')
         worksheet = workbook.add_sheet('重要度')
         worksheet.write(0, 0, label='年')
@@ -591,9 +624,9 @@ if __name__=="__main__":
     logger.info("report_year:" + report_year)
     logger.info("report_week:" + report_week)
     # employee_list = get_employee_list_from_table_report_target(server, user, password, database)#获取人员列表
-    employee_list=[1, 26]
+    employee_list=[1, 26, 51, 424, 3, 213, 103, 283, 10063537, 112, 545, 10046746, 217, 121, 120, 1503, 10122993, 10123049, 10137268, 624, 10013155, 10026590, 10078800, 10129607, 1500, 10116731, 10013103, 10111739, 10126451, 111, 311, 215, 165, 10117022, 10042482, 145, 10046860, 10046784, 10107434, 76, 10122708, 416, 10131709, 74, 228, 10015868, 90, 10076459, 79, 235, 306, 762, 16, 10017073, 1705, 554, 1186, 348, 678, 736, 1886, 1220, 10010130, 10065058, 10003346, 9, 10026120, 10002726, 10007841, 1150, 332, 767, 1235, 10004910, 10002779, 461, 1448, 720, 10015853, 225, 1215, 839, 1277, 10002728, 58, 54, 1244, 666, 10006230, 10046716, 377, 10122718, 10009630, 10004940, 389, 488, 138, 549, 333, 129, 745, 1511, 871, 922, 1111, 925, 1570, 1535, 10033876, 2200541, 10009565, 590, 10002821, 1264, 10070965, 78, 625, 118, 555, 219, 981, 10118686, 1083, 141, 321, 10122965, 10123031, 10137028, 10140240, 10091338, 401, 528, 639, 781, 10005546, 404, 10033909, 10046793, 10009989, 605, 36, 1322, 10008317, 325, 10007966, 10046751, 10046764, 10071000, 695, 10027091, 10033862, 10090025, 595, 1104, 757, 1097, 1115, 529, 566, 10002717, 108, 574, 706, 10046762, 10002739, 1521, 344, 427, 601, 908, 10016662, 10057667, 349, 10015855, 10125564, 516, 10018786, 33, 447, 780, 10022781, 411, 452, 550, 616, 10057629, 1149, 5, 10084226, 578, 10003889, 1774, 10134722, 320, 1070, 181, 226, 334, 84, 301, 519, 715, 10026602, 10026608, 10026601, 10012699, 1624, 433, 164, 154, 10008801, 10010699, 958, 503, 10003934, 10007915, 10049075, 10120236, 10130291, 10084352, 366, 10027236, 300, 510, 773, 614, 768, 72, 94, 187, 313, 1677, 1506, 1755, 10000247, 1512, 162, 1037, 414, 160, 679, 73, 113, 171, 10128443, 10126971, 353, 774, 1261, 2200097, 96, 1128, 127, 1129, 1505, 10008572, 10068368, 2200382, 2200816, 10004307, 10084299, 2200274, 2200358, 10010703, 10015187, 184, 2200231, 2200400, 10015091, 2200188, 631, 1309, 457, 10002788, 10104861, 1573, 10135437, 583, 10002755, 10046753, 10066914, 10003670, 1071, 97002, 96010, 96009]
     employee_list =[str(i) for i in employee_list]
-    # employee_list = employee_list[201:]
+    employee_list = employee_list[0:101]
     calculate_importance_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week)#生成关键字和重要度写入Excel
     time_end = datetime.datetime.now()
     end = time.clock()
