@@ -14,25 +14,52 @@ IGNORE_WORDS = set([])  # 重要度計算外とする語
 JP_HIRA = set([chr(i) for i in range(12353, 12436)])
 # カタカナ
 JP_KATA = set([chr(i) for i in range(12449, 12532+1)])
-# MULTIBYTE_MARK = set([
-#     "", "、", "。", "”", "“", "，", "《", "》", "：", "（", "）", "；",
-#     "〈", "〉", "「", "」", "『", "』", "【", "】", "〔", "〕", "？", "！",
-#     "ー", "-", "ー", "…", "‘", "’", "／",
-#     "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "０", "１", "２", "３",
-#     "４", "５", "６", "７", "８", "９",
-#     " ",
-#     ])
-
+JP_KATA.add('ー')
+#要忽略的字符
+# "ー"特殊
 MULTIBYTE_MARK = set([
-     "、", "。", "”", "“", "，", "《", "》", "：", "（", "）", "(",")","；",".","/","・","～","%","％","■","~","→",
-    "〈", "〉", "「", "」", "『", "』", "【", "】", "〔", "〕", "？", "！","+","-","*","÷",
-    "ー", "-", "ー", "…", "‘", "’", "／","/","/>","<",">","><","/><",
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "０", "１", "２", "３",
-    "４", "５", "６", "７", "８", "９",
-    "①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"
+    "、", ",", "，", "。","．", "”", "“", "《", "》", "：", "（", "）", "(",")","；",".","・","～","`","%","％","$","￥","~",
+    "■","●","◆","×","※","►","▲","▼","‣","·","∶",":","‐",
+    "〈", "〉", "「", "」", "『", "』", "【", "】", "〔", "〕", "?","？","!","！","+","-","*","×","÷","±",
+    # "ー",
+    "…", "‘", "’", "／","/","<",">","><","[","]","#","＃","゛","゜",
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "０", "１", "２", "３","４", "５", "６", "７", "８", "９",
+    "①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳",
+    "➀","➁","➂","➃","➄","➅","➆","➇","➈","➉",
+    "⑴","⑵","⑶","⑷","⑸","⑹","⑺","⑻","⑼","⑽","⑾","⑿","⒀","⒁","⒂","⒃","⒄","⒅","⒆","⒇",
+    "⒈","⒉","⒊","⒋","⒌","⒍","⒎","⒏","⒐","⒑","⒒","⒓","⒔","⒕","⒖","⒗","⒘","⒙","⒚","⒛",
+    "ⅰ","ⅱ","ⅲ","ⅳ","ⅴ","ⅵ","ⅶ","ⅷ","ⅸ","ⅹ",
+    "Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ", "Ⅺ", "Ⅻ",
+    "❶","❷","❸","❹","❺","❻","❼","❽","❾","❿","⓫","⓬","⓭","⓮","⓯","⓰","⓱","⓲","⓳","⓴",
+    "㈠","㈡","㈢","㈣","㈤","㈥","㈦","㈧","㈨","㈩",
+    "㊀","㊁","㊂","㊃","㊄","㊅","㊆","㊇","㊈","㊉",
+    "Ⓐ","Ⓑ","Ⓒ","Ⓓ","Ⓔ","Ⓕ","Ⓖ","Ⓗ","Ⓘ","Ⓙ","Ⓚ","Ⓛ","Ⓜ","Ⓝ","Ⓞ","Ⓟ","Ⓠ","Ⓡ","Ⓢ","Ⓣ","Ⓤ","Ⓥ","Ⓦ","Ⓧ","Ⓨ","Ⓩ",
+    "ⓐ","ⓑ","ⓒ","ⓓ","ⓔ","ⓕ","ⓖ","ⓗ","ⓘ","ⓙ","ⓚ","ⓛ","ⓜ","ⓝ","ⓞ","ⓟ","ⓠ","ⓡ","ⓢ","ⓣ","ⓤ","ⓥ","ⓦ","ⓧ","ⓨ","ⓩ",
+    "⒜","⒝","⒞","⒟","⒠","⒡","⒢","⒣","⒤","⒥","⒦","⒧","⒨","⒩","⒪","⒫","⒬","⒭","⒮","⒯","⒰","⒱","⒲","⒳","⒴","⒵",
+    "\r\n","\t","\n","\\",
+    "◇","＜","＞","＊","＝","◍","＋","○","―","ˇ","ˉ","¨","〃","—","‖","∧","∨","∑","∏","∪","∩","∈","∷","√","⊥","∥","∠",
+    "⌒","⊙","∫","∮","≡","≌","≈","∽","∝","≠","≮","≯","≤","≥","∞","∵","∴","♂","♀","°","′","″","℃","＄","¤","￠","￡",
+    "‰","§","№","☆","★","□","〓","〜","⬜","〇","＿","▢","∟",
+    "⇒",".","◯","△","✕","＆","|","＠","@","&","〖","〗","◎",
+    "〒","℉","﹪","‰","﹫","㎡","㏕","㎜","㎝","㎞","㏎","m","㎎","㎏","㏄","○","¤","%","$","º","¹","²","³",
+    "↑","↓","←","→","↖","↗","↘","↙","↔","↕","➻","➼","➽","➸","➳","➺","➻","➴","➵","➶","➷","➹",
+    "▶","►","▷","◁","◀","◄","«","»","➩","➪","➫","➬","➭","➮","➯","➱","⏎","➲","➾","➔","➘","➙",
+    "➚","➛","➜","➝","➞","➟","➠","➡","➢","➣","➤","➥","➦","➧","➨","↚","↛","↜","↝","↞","↟","↠",
+    "↠","↡","↢","↣","↤","↤","↥","↦","↧","↨","⇄","⇅","⇆","⇇","⇈","⇉","⇊","⇋","⇌","⇍","⇎","⇏","⇐","⇑","⇒",
+    "⇓","⇔","⇖","⇗","⇘","⇙","⇜","↩","↪","↫","↬","↭","↮","↯","↰","↱","↲","↳","↴","↵","↶","↷","↸","↹","☇",
+    "☈","↼","↽","↾","↿","⇀","⇁","⇂","⇃","⇞","⇟","⇠","⇡","⇢","⇣","⇤","⇥","⇦","⇧","⇨","⇩","⇪","↺","↻","⇚","⇛","♐"
+    # "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+    # "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
     ])
 
-
+'''
+リテールAI戦略
+プラットフォームビジネス
+産業部門
+デジタル
+'''
+'''
 def cmp_noun_list(data):
     """
     和文テキストを受け取り、複合語（空白区切りの単名詞）のリストを返す
@@ -44,16 +71,16 @@ def cmp_noun_list(data):
         terms = []
         if len(morph) == 0:
             continue
-        morph = morph.replace(",", " ")
-        morph = morph.replace(".", " ")
-        morph = morph.replace("(", " ")
-        morph = morph.replace(")", " ")
-        morph = morph.replace(";", " ")
-        morph = morph.replace("!", " ")
-        morph = morph.replace("[", " ")
-        morph = morph.replace("]", " ")
-        morph = morph.replace("?", " ")
-        morph = morph.replace("/", " ")
+        # morph = morph.replace(",", " ")
+        # morph = morph.replace(".", " ")
+        # morph = morph.replace("(", " ")
+        # morph = morph.replace(")", " ")
+        # morph = morph.replace(";", " ")
+        # morph = morph.replace("!", " ")
+        # morph = morph.replace("[", " ")
+        # morph = morph.replace("]", " ")
+        # morph = morph.replace("?", " ")
+        # morph = morph.replace("/", " ")
         is_kata = 0
         kata = ""
         while len(morph) > 1:
@@ -68,8 +95,8 @@ def cmp_noun_list(data):
                     is_kata = 0
                 morph = morph[len(eng_word.group(0)):]
                 terms.append(eng_word.group(0))
-                _increase(cmp_nouns, terms)
-                is_stopword = 1
+                # _increase(cmp_nouns, terms)
+                is_stopword = 0
             if not len(morph) > 1:
                 continue
             # マルチバイト記号
@@ -93,7 +120,7 @@ def cmp_noun_list(data):
             # カタカナ
             if morph[0] in JP_KATA:
                 kata += morph[0]
-                is_kata = 1
+                is_kata = 1##########test0
             if not is_stopword:
                 if not is_kata:
                     terms.append(morph[0])
@@ -101,38 +128,38 @@ def cmp_noun_list(data):
     # 行の末尾の処理
     _increase(cmp_nouns, terms)
     return cmp_nouns
-
-
-
 '''
+
+
 def cmp_noun_list(data):
     """
     和文テキストを受け取り、複合語（空白区切りの単名詞）のリストを返す
     """
     savetxt_list=[]
-    deltxt_list = []
-    # mecab = MeCab.Tagger("-Ochasen") #有词性标注的
-    mecab = MeCab.Tagger("-Owakati")  # 没有词性标注的
+    mecab = MeCab.Tagger("-Ochasen") #有词性标注的
+    # mecab = MeCab.Tagger("-Owakati")  # 没有词性标注的
+    data = data.replace("<br/>", "")
+    data = data.replace("<br>", "")
     cmp_nouns = mecab.parse(data)
-    cmp_nouns = cmp_nouns.split(" ")
-    for every_keyword in cmp_nouns:
-        for item in every_keyword:
-            if len(every_keyword)==1 or item in MULTIBYTE_MARK or item in JP_HIRA or item in JP_KATA or str(item).isdigit():
-                deltxt_list.append(every_keyword)
-            elif len(every_keyword) > 1 and (item in MULTIBYTE_MARK or item in JP_HIRA or item in JP_KATA or str(item).isdigit()):
-                deltxt_list.append(every_keyword)
-            else:
-                savetxt_list.append(every_keyword)
-        # if ((every_keyword  and (every_keyword in MULTIBYTE_MARK or every_keyword in JP_HIRA or every_keyword in JP_KATA)) or (every_keyword and len(every_keyword.strip())==1)):
-        #     deltxt_list.append(every_keyword)
-        # else:
-        #     savetxt_list.append(every_keyword)
+    every_row = cmp_nouns.split('\n')
+    # for every_attribute_line in every_row:
+    #     every_attribute_array = every_attribute_line.split('\t')
+    #     for every_attribute in every_attribute_array:
+    #         if every_attribute.find('名詞') != -1:#能在这个属性中找打名词
+    #             savetxt_list.append(every_attribute_array[0])
+    #             break
+    for every_attribute_line in every_row:
+        every_attribute_array = every_attribute_line.split('\t')
+        if len(every_attribute_array)>3:
+            if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找打名词
+                if (every_attribute_array[0] and len(every_attribute_array[0])>1 and not(every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK ):
+                    savetxt_list.append(every_attribute_array[0])
     savetxt_list = [' '.join(i) for i in savetxt_list]
     cmp_nouns = savetxt_list
     terms = []
     _increase(cmp_nouns, terms)
     return cmp_nouns
-'''
+
 
 
 def _increase(cmp_nouns, terms):
