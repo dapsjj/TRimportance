@@ -210,7 +210,7 @@ def cmp_noun_list(data):
         every_attribute_array = every_attribute_line.split('\t')
         if len(every_attribute_array)>3:
             if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找打名词
-                if (every_attribute_array[0] and len(every_attribute_array[0].strip())>1 and not(every_attribute_array[0].strip().isdigit()) and every_attribute_array.strip()[0][0] not in MULTIBYTE_MARK ):
+                if (every_attribute_array[0] and len(every_attribute_array[0].strip())>1 and not(every_attribute_array[0].strip().isdigit()) and every_attribute_array[0].strip()[0] not in MULTIBYTE_MARK ):
                     savetxt_list.append(every_attribute_array[0])
     savetxt_list = [' '.join(i) for i in savetxt_list]
     cmp_nouns = savetxt_list
