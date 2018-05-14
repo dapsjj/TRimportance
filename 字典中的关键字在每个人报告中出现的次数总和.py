@@ -210,7 +210,7 @@ def cmp_noun_list(data):
         every_attribute_array = every_attribute_line.split('\t')
         if len(every_attribute_array)>3:
             if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找打名词
-                if (every_attribute_array[0] and len(every_attribute_array[0])>1 and not(every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK ):
+                if (every_attribute_array[0] and len(every_attribute_array[0].strip())>1 and not(every_attribute_array[0].strip().isdigit()) and every_attribute_array.strip()[0][0] not in MULTIBYTE_MARK ):
                     savetxt_list.append(every_attribute_array[0])
     savetxt_list = [' '.join(i) for i in savetxt_list]
     cmp_nouns = savetxt_list
@@ -414,7 +414,8 @@ def modify_agglutinative_lang(data):
             eng = 0
         # 前後ともアルファベットなら半角空白空け、それ以外なら区切りなしで連結
         if eng and eng_pre:
-            data_disp = data_disp + " " + noun
+            # data_disp = data_disp + " " + noun
+            data_disp = data_disp + noun
         else:
             data_disp = data_disp + noun
         eng_pre = eng
@@ -589,7 +590,7 @@ def read_report_from_database(server, user, password, database,report_year,repor
         conn.close()
 
 
-def calculate_importance_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week):
+def calculate_count_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week):
     '''
     :param employee_list:report_target表的社员列表
     :param report_year:top报告年份
@@ -613,9 +614,9 @@ def calculate_importance_of_everyword_output_to_excel(server, user, password, da
             for employee in employee_list:
                 employee_report = read_report_from_database(server, user, password, database, report_year,report_week,employee)# 社员TOP报告内容
                 if employee_report:#top报告有内容采取向excel输出信息
-                    content = re.sub('\s', '', employee_report)#去掉空白字符
+                    # content = re.sub('\s', '', employee_report)#去掉空白字符
                     # 複合語を抽出し、重要度を算出
-                    frequency_member = cmp_noun_dict(content)
+                    frequency_member = cmp_noun_dict(employee_report)
                     frequency_member_keys = list(frequency_member.keys())
                     for cmp_noun_key in frequency_member_keys:
                         if cmp_noun_key in key_word_dict_keys:
@@ -674,10 +675,10 @@ if __name__=="__main__":
     for key in key_word_dict_keys:
         resulet_dict[key] = 0
     # employee_list = get_employee_list_from_table_report_target(server, user, password, database)#获取人员列表
-    employee_list=[1, 26]
+    employee_list = [1, 26]
     employee_list =[str(i) for i in employee_list]
     # employee_list = employee_list[201:]
-    calculate_importance_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week)#生成关键字和重要度写入Excel
+    calculate_count_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week)#
     new_word_dict = dict(sorted(resulet_dict.items(), key=lambda d: d[1], reverse=True))
     for key, value in new_word_dict.items():
         print(modify_agglutinative_lang(key), value, sep="\t")
