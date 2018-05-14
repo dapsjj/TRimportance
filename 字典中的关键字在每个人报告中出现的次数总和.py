@@ -617,9 +617,6 @@ def calculate_importance_of_everyword_output_to_excel(server, user, password, da
                     # 複合語を抽出し、重要度を算出
                     frequency_member = cmp_noun_dict(content)
                     frequency_member_keys = list(frequency_member.keys())
-                    key_word_dict_keys = list(key_word_dict.keys())
-                    for key in key_word_dict_keys:
-                        resulet_dict[key] = 0
                     for cmp_noun_key in frequency_member_keys:
                         if cmp_noun_key in key_word_dict_keys:
                             resulet_dict[cmp_noun_key] += frequency_member[cmp_noun_key]
@@ -673,6 +670,9 @@ if __name__=="__main__":
     # 重要度が高い順に並べ替えて出力
     key_word_dict = frequency
     resulet_dict={}
+    key_word_dict_keys = list(key_word_dict.keys())
+    for key in key_word_dict_keys:
+        resulet_dict[key] = 0
     # employee_list = get_employee_list_from_table_report_target(server, user, password, database)#获取人员列表
     employee_list=[1, 26]
     employee_list =[str(i) for i in employee_list]
