@@ -117,6 +117,7 @@ MULTIBYTE_MARK = set([
     # "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
     ])
 
+
 '''
 def cmp_noun_list(data):
     """
@@ -209,7 +210,8 @@ def cmp_noun_list(data):
         every_attribute_array = every_attribute_line.split('\t')
         if len(every_attribute_array)>3:
             if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找打名词
-                if (every_attribute_array[0] and len(every_attribute_array[0])>1 and not(every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK ):
+                # if (every_attribute_array[0] and len(every_attribute_array[0])>1 and not(every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK ):
+                if (every_attribute_array[0] and len(every_attribute_array[0].strip()) > 1 and not (every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK):
                     savetxt_list.append(every_attribute_array[0])
     savetxt_list = [' '.join(i) for i in savetxt_list]
     cmp_nouns = savetxt_list
@@ -684,7 +686,7 @@ if __name__=="__main__":
     # employee_list = get_employee_list_from_table_report_target(server, user, password, database)#获取人员列表
     employee_list=[1, 26]
     employee_list =[str(i) for i in employee_list]
-    employee_list = employee_list[0:101]
+    employee_list = employee_list[201:]
     calculate_importance_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week)#生成关键字和重要度写入Excel
     time_end = datetime.datetime.now()
     end = time.clock()
