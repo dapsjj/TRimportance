@@ -435,7 +435,7 @@ def calculate_importance_to_excel(member_txt,year,week,employee_code,file_path):
     current_row = rows
     tatext_member = member_txt
     content = re.sub('\s', '', member_txt)#去掉空白字符
-    length_member_topReport_content = len(content)
+    length_member_topReport_content = len(tatext_member)
     # 複合語を抽出し、重要度を算出
     frequency_member = cmp_noun_dict(tatext_member)
     LR_member = score_lr(frequency_member, ignore_words=IGNORE_WORDS, lr_mode=1, average_rate=1)
