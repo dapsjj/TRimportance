@@ -5,7 +5,7 @@ import re
 import MeCab
 
 # ファイルを読み込む
-text = open(r"../testMecab/text.txt", "r", encoding="utf-8").read()
+text = open(r"../testMecab/text2.txt", "r", encoding="utf-8").read()
 TOTAL_MARK = "."  # トータル文書数を示す"."をセット
 OTAL_MARK = "."  # トータル文書数を示す"."をセット
 IGNORE_WORDS = set([])  # 重要度計算外とする語
@@ -238,29 +238,52 @@ def cmp_noun_list(data):
         if len(every_attribute_array) > 3:
             save_word_list.append([every_attribute_array[0].strip(),every_attribute_array[3].strip()])
     length_save_word_list = len(save_word_list)
-    for i in range(length_save_word_list-3):
-        if i == 0 and save_word_list[i][1].find('名詞')!=-1:
-            if i == 0 and save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1\
-                and save_word_list[i][0] not in MULTIBYTE_MARK :
+    for i in range(length_save_word_list-4):
+        if i == 0:
+            if save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1\
+                and save_word_list[i][0] not in MULTIBYTE_MARK:
                 savetxt_list.append(save_word_list[i][0])
-            elif i == 0 and save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i+1][1].find('名詞-数') != -1 \
-                and save_word_list[i+2][0] not in MULTIBYTE_MARK and save_word_list[i+2][1].find('名詞') != -1:
-                savetxt_list.append(save_word_list[i][0]+save_word_list[i+1][0]+save_word_list[i+2][0])
-            elif i == 0 and save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i-1][1].find('名詞-数') == -1\
-                and save_word_list[i+1][0] not in MULTIBYTE_MARK and save_word_list[i+1][1].find('名詞') != -1:
-                savetxt_list.append(save_word_list[i][0]+save_word_list[i+1][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][0] not in MULTIBYTE_MARK and save_word_list[i + 2][1].find('名詞') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][0] not in MULTIBYTE_MARK \
+                and save_word_list[i + 3][1].find('名詞') != -1 and save_word_list[i + 3][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][0] not in MULTIBYTE_MARK \
+                and save_word_list[i + 1][1].find('名詞') != -1 and save_word_list[i + 1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])
 
         if i>0:
             if save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1 \
-                    and save_word_list[i-1][1].find('名詞-数') == -1 and save_word_list[i][0] not in MULTIBYTE_MARK:
-                savetxt_list.append(save_word_list[i][0])
+                and save_word_list[i-1][1].find('名詞-数') == -1 and save_word_list[i][0] not in MULTIBYTE_MARK:
+                savetxt_list.append(save_word_list[i][0])#保存名词
             elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
-                    and save_word_list[i + 2][0] not in MULTIBYTE_MARK and save_word_list[i + 2][1].find('名詞') != -1:
-                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
-            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i-1][1].find('名詞-数') == -1\
-                    and save_word_list[i + 1][0] not in MULTIBYTE_MARK and save_word_list[i + 1][1].find('名詞') != -1:
-                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])
+                and save_word_list[i + 2][0] not in MULTIBYTE_MARK and save_word_list[i + 2][1].find('名詞') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])#保存数词+数词+名词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][0] not in MULTIBYTE_MARK\
+                and save_word_list[i + 3][1].find('名詞') != -1 and save_word_list[i + 3][1].find('名詞-数') == -1 \
+                and save_word_list[i - 1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0]+save_word_list[i + 3][0])#保存数词+数词+数词+名词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i+1][1].find('名詞-数') == -1\
+                and save_word_list[i + 1][0] not in MULTIBYTE_MARK and save_word_list[i + 1][1].find('名詞') != -1 \
+                and save_word_list[i + 1][1].find('名詞-数') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])#保存数词+名词
 
+
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])#保存数词+数词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][1].find('名詞') == -1\
+                and save_word_list[i - 1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])#保存数词+数词+数词+数词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i+1][1].find('名詞') == -1\
+                and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0])#保存数词
 
     # savetxt_list = [' '.join(i) for i in savetxt_list]  # 不加这一句,重要度就是频率
 
