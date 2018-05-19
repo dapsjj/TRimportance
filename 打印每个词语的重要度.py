@@ -5,10 +5,11 @@ import re
 import MeCab
 
 # ファイルを読み込む
-text = open(r"../testMecab/text2.txt", "r", encoding="utf-8").read()
+text = open(r"../testMecab/text.txt", "r", encoding="utf-8").read()
 TOTAL_MARK = "."  # トータル文書数を示す"."をセット
 OTAL_MARK = "."  # トータル文書数を示す"."をセット
 IGNORE_WORDS = set([])  # 重要度計算外とする語
+no_need_words = ["これ","ここ","こと","それ","ため","よう","さん","そこ","たち","ところ","それぞれ","これら","どれ","br"]
 
 # ひらがな
 JP_HIRA = set([chr(i) for i in range(12353, 12436)])
@@ -22,8 +23,8 @@ MULTIBYTE_MARK = set([
     '%', '％', '$', '￥', '~', '■', '●', '◆', '×', '※', '►', '▲', '▼', '‣', '·', '∶', ':', '‐', '_', '‼', '≫',
     '－', ';', '･', '〈', '〉', '「', '」', '『', '』', '【', '】', '〔', '〕', '?', '？', '!', '！', '+', '-',
     '*', '÷', '±', '…', '‘', '’', '／', '/', '<', '>', '><', '[', ']', '#', '＃', '゛', '゜',
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '０',
-    '１', '２', '３', '４', '５', '６', '７', '８', '９',
+    # '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    # '０','１', '２', '３', '４', '５', '６', '７', '８', '９',
     '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨',
     '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳',
     '➀', '➁', '➂', '➃', '➄', '➅', '➆', '➇', '➈', '➉',
@@ -111,12 +112,7 @@ MULTIBYTE_MARK = set([
     # "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
     ])
 
-'''
-リテールAI戦略
-プラットフォームビジネス
-産業部門
-デジタル
-'''
+
 '''
 def cmp_noun_list(data):
     """
@@ -196,29 +192,107 @@ def cmp_noun_list(data):
     savetxt_list=[]
     mecab = MeCab.Tagger("-Ochasen") #有词性标注的
     # mecab = MeCab.Tagger("-Owakati")  # 没有词性标注的
-    data = data.replace("<br/>", "")
-    data = data.replace("<br>", "")
+    # data = data.replace("<br/>", "")
+    # data = data.replace("<br>", "")
     cmp_nouns = mecab.parse(data)
     every_row = cmp_nouns.split('\n')
-    # for every_attribute_line in every_row:
-    #     every_attribute_array = every_attribute_line.split('\t')
-    #     for every_attribute in every_attribute_array:
-    #         if every_attribute.find('名詞') != -1:#能在这个属性中找打名词
-    #             savetxt_list.append(every_attribute_array[0])
-    #             break
+    '''
     for every_attribute_line in every_row:
         every_attribute_array = every_attribute_line.split('\t')
         if len(every_attribute_array)>3:
             if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找到名词
-                # if (every_attribute_array[0] and len(every_attribute_array[0])>1 and not(every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK ):
                 if (every_attribute_array[0] and len(every_attribute_array[0].strip()) > 1 and not (every_attribute_array[0].strip().isdigit()) and every_attribute_array[0].strip()[0] not in MULTIBYTE_MARK):
                     savetxt_list.append(every_attribute_array[0])
     savetxt_list = [' '.join(i) for i in savetxt_list]#不加这一句,重要度就是频率
     cmp_nouns = savetxt_list
-    terms = []
-    _increase(cmp_nouns, terms)
     return cmp_nouns
+    '''
 
+    '''
+    # 1295万に対し2099万（予算比162.1％）予算乖離 + 804万 < br / > 部門別予測 < br / >
+    str_word_in_front = ''
+    # next_is_noun = False #下一个元素是名词
+    has_number = False #有数字
+    for every_attribute_line in every_row:
+        every_attribute_array = every_attribute_line.split('\t')
+        if len(every_attribute_array)>3:
+            if every_attribute_array[3].find('名詞') != -1 :  # 能在这个属性中找到名词
+                if every_attribute_array[3].find('名詞-数') != -1:
+                    str_word_in_front += every_attribute_array[0]
+                    has_number = True
+                    continue
+                if has_number==True:
+                    savetxt_list.append(str_word_in_front + every_attribute_array[0])
+                    str_word_in_front = ''
+                    has_number = False
+                else:
+                    savetxt_list.append(str_word_in_front + every_attribute_array[0])
+            # str_word_in_front += every_attribute_array[0]
+            # savetxt_list.append(str_word_in_front)
+            # str_word_in_front = ''
+            # next_is_noun = False
+    '''
+    save_word_list = []
+    for every_attribute_line in every_row:
+        every_attribute_array = every_attribute_line.split('\t')
+        if len(every_attribute_array) > 3:
+            save_word_list.append([every_attribute_array[0].strip(),every_attribute_array[3].strip()])
+    length_save_word_list = len(save_word_list)
+    for i in range(length_save_word_list-3):
+        if i == 0 and save_word_list[i][1].find('名詞')!=-1:
+            if i == 0 and save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1\
+                and save_word_list[i][0] not in MULTIBYTE_MARK :
+                savetxt_list.append(save_word_list[i][0])
+            elif i == 0 and save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i+1][1].find('名詞-数') != -1 \
+                and save_word_list[i+2][0] not in MULTIBYTE_MARK and save_word_list[i+2][1].find('名詞') != -1:
+                savetxt_list.append(save_word_list[i][0]+save_word_list[i+1][0]+save_word_list[i+2][0])
+            elif i == 0 and save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i-1][1].find('名詞-数') == -1\
+                and save_word_list[i+1][0] not in MULTIBYTE_MARK and save_word_list[i+1][1].find('名詞') != -1:
+                savetxt_list.append(save_word_list[i][0]+save_word_list[i+1][0])
+
+        if i>0:
+            if save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1 \
+                    and save_word_list[i-1][1].find('名詞-数') == -1 and save_word_list[i][0] not in MULTIBYTE_MARK:
+                savetxt_list.append(save_word_list[i][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                    and save_word_list[i + 2][0] not in MULTIBYTE_MARK and save_word_list[i + 2][1].find('名詞') != -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i-1][1].find('名詞-数') == -1\
+                    and save_word_list[i + 1][0] not in MULTIBYTE_MARK and save_word_list[i + 1][1].find('名詞') != -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])
+
+
+    # savetxt_list = [' '.join(i) for i in savetxt_list]  # 不加这一句,重要度就是频率
+
+    new_txt_list = []
+    for every_word in savetxt_list:#每个字符都不在特殊符号里并且不是数字的词语添加到new_txt_list
+        append_flag = True
+        if (every_word is not None and len(every_word.strip()) > 1 and not (every_word.strip().isdigit())):
+            for i in every_word:
+                if i in MULTIBYTE_MARK:
+                    append_flag = False
+                    break
+            if append_flag == True:
+                new_txt_list.append(every_word)
+
+    new_txt_list2 = []
+    for every_word in new_txt_list:#不包含no_need_words的词加入到new_txt_list2
+        find_flag = False
+        for word in no_need_words:
+            if every_word.find(word) != -1:
+                find_flag = True
+                break
+        if find_flag == False:
+            new_txt_list2.append(every_word)
+
+    new_txt_list3 = []
+    for every_word in new_txt_list2:#去掉0和片假名长音'ー'开头的字符串
+        find_flag = False
+        if not every_word.startswith('0') and not  every_word.startswith('０') and not every_word.startswith('ー'):
+            new_txt_list3.append(every_word)
+    new_txt_list3 = [' '.join(i) for i in new_txt_list3]#不加这一句,重要度就是频率
+    cmp_nouns = new_txt_list3
+    return cmp_nouns
 
 
 def _increase(cmp_nouns, terms):
