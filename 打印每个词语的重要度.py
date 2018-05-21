@@ -1,13 +1,9 @@
 import collections
-import termextract.japanese_plaintext
-import termextract.core
 import re
 import MeCab
 
 # ファイルを読み込む
-text = open(r"../testMecab/text2.txt", "r", encoding="utf-8").read()
-TOTAL_MARK = "."  # トータル文書数を示す"."をセット
-OTAL_MARK = "."  # トータル文書数を示す"."をセット
+text = open(r"../testMecab/text.txt", "r", encoding="utf-8").read()
 IGNORE_WORDS = set([])  # 重要度計算外とする語
 no_need_words = ["これ","ここ","こと","それ","ため","よう","さん","そこ","たち","ところ","それぞれ","これら","どれ","br"]
 
@@ -21,7 +17,7 @@ JP_KATA.add('ー')
 MULTIBYTE_MARK = set([
     '、', ',', '，', '。', '．','\'', '”', '“', '《', '》', '：', '（', '）', '(', ')', '；', '.', '・', '～', '`',
     '%', '％', '$', '￥', '~', '■', '●', '◆', '×', '※', '►', '▲', '▼', '‣', '·', '∶', ':', '‐', '_', '‼', '≫',
-    '－', ';', '･', '〈', '〉', '「', '」', '『', '』', '【', '】', '〔', '〕', '?', '？', '!', '！', '+', '-',
+    '－','−', ';', '･', '〈', '〉', '「', '」', '『', '』', '【', '】', '〔', '〕', '?', '？', '!', '！', '+', '-',
     '*', '÷', '±', '…', '‘', '’', '／', '/', '<', '>', '><', '[', ']', '#', '＃', '゛', '゜',
     # '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     # '０','１', '２', '３', '４', '５', '６', '７', '８', '９',
@@ -196,42 +192,6 @@ def cmp_noun_list(data):
     # data = data.replace("<br>", "")
     cmp_nouns = mecab.parse(data)
     every_row = cmp_nouns.split('\n')
-    '''
-    for every_attribute_line in every_row:
-        every_attribute_array = every_attribute_line.split('\t')
-        if len(every_attribute_array)>3:
-            if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找到名词
-                if (every_attribute_array[0] and len(every_attribute_array[0].strip()) > 1 and not (every_attribute_array[0].strip().isdigit()) and every_attribute_array[0].strip()[0] not in MULTIBYTE_MARK):
-                    savetxt_list.append(every_attribute_array[0])
-    savetxt_list = [' '.join(i) for i in savetxt_list]#不加这一句,重要度就是频率
-    cmp_nouns = savetxt_list
-    return cmp_nouns
-    '''
-
-    '''
-    # 1295万に対し2099万（予算比162.1％）予算乖離 + 804万 < br / > 部門別予測 < br / >
-    str_word_in_front = ''
-    # next_is_noun = False #下一个元素是名词
-    has_number = False #有数字
-    for every_attribute_line in every_row:
-        every_attribute_array = every_attribute_line.split('\t')
-        if len(every_attribute_array)>3:
-            if every_attribute_array[3].find('名詞') != -1 :  # 能在这个属性中找到名词
-                if every_attribute_array[3].find('名詞-数') != -1:
-                    str_word_in_front += every_attribute_array[0]
-                    has_number = True
-                    continue
-                if has_number==True:
-                    savetxt_list.append(str_word_in_front + every_attribute_array[0])
-                    str_word_in_front = ''
-                    has_number = False
-                else:
-                    savetxt_list.append(str_word_in_front + every_attribute_array[0])
-            # str_word_in_front += every_attribute_array[0]
-            # savetxt_list.append(str_word_in_front)
-            # str_word_in_front = ''
-            # next_is_noun = False
-    '''
     save_word_list = []
     for every_attribute_line in every_row:
         every_attribute_array = every_attribute_line.split('\t')
@@ -273,18 +233,19 @@ def cmp_noun_list(data):
                 and save_word_list[i + 1][1].find('名詞-数') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
                 savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])#保存数词+名词
 
-
+            '''
+            #保存数词
             elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
                 and save_word_list[i + 2][1].find('名詞') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
                 savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])#保存数词+数词
             elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
                 and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][1].find('名詞') == -1\
                 and save_word_list[i - 1][1].find('名詞-数') == -1:
-                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])#保存数词+数词+数词+数词
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])#保存数词+数词+数词
             elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i+1][1].find('名詞') == -1\
                 and save_word_list[i-1][1].find('名詞-数') == -1:
                 savetxt_list.append(save_word_list[i][0])#保存数词
-
+            '''
 
     # savetxt_list = [' '.join(i) for i in savetxt_list]  # 不加这一句,重要度就是频率
 
@@ -568,48 +529,6 @@ def frequency2tf(frequency):
                         tf_score[nouns1] += frequency[nouns2]
         del length_list2[0]
     return tf_score
-
-
-def store_df(cmp_nouns, dbm=None):
-    """
-    DF (Document Frequency)の情報を蓄積する
-    """
-    # トータル文書数情報がないときは初期化
-    if TOTAL_MARK not in dbm:
-        dbm[TOTAL_MARK] = "0"
-    # データを一回読み込むごとに、文書数+1
-    total = int(dbm[TOTAL_MARK].decode("utf-8"))
-    new_total = str(total + 1)
-    dbm[TOTAL_MARK] = new_total
-    # 専門用語ごとにループ
-    for cmp_noun in cmp_nouns.keys():
-        if not cmp_noun:
-            continue
-        if cmp_noun == TOTAL_MARK:
-            continue
-        if cmp_noun in dbm:
-            count = int(dbm[cmp_noun].decode("utf-8"))
-            new_count = str(count + 1)
-            dbm[cmp_noun] = new_count
-        else:
-            dbm[cmp_noun] = "1"
-
-
-def get_idf(cmp_nouns, dbm=None):
-    """
-    蓄積したDFの情報をもとにIDFを返す
-    """
-    idf_score = {}
-    total = int(dbm[TOTAL_MARK].decode("utf-8"))
-    # 専門用語ごとにループ
-    for cmp_noun in cmp_nouns.keys():
-        if not cmp_noun:
-            continue
-        if cmp_noun in dbm:
-            count = int(dbm[cmp_noun].decode("utf-8"))
-            if count != 0:
-                idf_score[cmp_noun] = total / count
-    return idf_score
 
 
 def list2dict(list_data):
