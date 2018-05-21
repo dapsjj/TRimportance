@@ -285,6 +285,7 @@ def cmp_noun_list(data):
                 and save_word_list[i-1][1].find('名詞-数') == -1:
                 savetxt_list.append(save_word_list[i][0])#保存数词
 
+
     # savetxt_list = [' '.join(i) for i in savetxt_list]  # 不加这一句,重要度就是频率
 
     new_txt_list = []
