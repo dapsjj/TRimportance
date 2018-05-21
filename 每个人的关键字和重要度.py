@@ -16,7 +16,7 @@ import decimal #不加打包成exe会出错
 
 
 IGNORE_WORDS = set([])  # 重要度計算外とする語
-
+no_need_words = ["これ","ここ","こと","それ","ため","よう","さん","そこ","たち","ところ","それぞれ","これら","どれ","br"]
 # ひらがな
 JP_HIRA = set([chr(i) for i in range(12353, 12436)])
 # カタカナ
@@ -26,10 +26,10 @@ JP_KATA = set([chr(i) for i in range(12449, 12532+1)])
 MULTIBYTE_MARK = set([
     '、', ',', '，', '。', '．','\'', '”', '“', '《', '》', '：', '（', '）', '(', ')', '；', '.', '・', '～', '`',
     '%', '％', '$', '￥', '~', '■', '●', '◆', '×', '※', '►', '▲', '▼', '‣', '·', '∶', ':', '‐', '_', '‼', '≫',
-    '－', ';', '･', '〈', '〉', '「', '」', '『', '』', '【', '】', '〔', '〕', '?', '？', '!', '！', '+', '-',
+    '－','−', ';', '･', '〈', '〉', '「', '」', '『', '』', '【', '】', '〔', '〕', '?', '？', '!', '！', '+', '-',
     '*', '÷', '±', '…', '‘', '’', '／', '/', '<', '>', '><', '[', ']', '#', '＃', '゛', '゜',
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '０',
-    '１', '２', '３', '４', '５', '６', '７', '８', '９',
+    # '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    # '０','１', '２', '３', '４', '５', '６', '７', '８', '９',
     '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨',
     '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳',
     '➀', '➁', '➂', '➃', '➄', '➅', '➆', '➇', '➈', '➉',
@@ -196,28 +196,97 @@ def cmp_noun_list(data):
     savetxt_list=[]
     mecab = MeCab.Tagger("-Ochasen") #有词性标注的
     # mecab = MeCab.Tagger("-Owakati")  # 没有词性标注的
-    data = data.replace("<br/>", "")
-    data = data.replace("<br>", "")
+    # data = data.replace("<br/>", "")
+    # data = data.replace("<br>", "")
     cmp_nouns = mecab.parse(data)
     every_row = cmp_nouns.split('\n')
-    # for every_attribute_line in every_row:
-    #     every_attribute_array = every_attribute_line.split('\t')
-    #     for every_attribute in every_attribute_array:
-    #         if every_attribute.find('名詞') != -1:#能在这个属性中找打名词
-    #             savetxt_list.append(every_attribute_array[0])
-    #             break
+    save_word_list = []
     for every_attribute_line in every_row:
         every_attribute_array = every_attribute_line.split('\t')
-        if len(every_attribute_array)>3:
-            if every_attribute_array[3].find('名詞') != -1:  # 能在这个属性中找打名词
-                # if (every_attribute_array[0] and len(every_attribute_array[0])>1 and not(every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK ):
-                if (every_attribute_array[0] and len(every_attribute_array[0].strip()) > 1 and not (every_attribute_array[0].isdigit()) and every_attribute_array[0][0] not in MULTIBYTE_MARK):
-                    savetxt_list.append(every_attribute_array[0])
-    savetxt_list = [' '.join(i) for i in savetxt_list]
-    cmp_nouns = savetxt_list
-    terms = []
-    _increase(cmp_nouns, terms)
+        if len(every_attribute_array) > 3:
+            save_word_list.append([every_attribute_array[0].strip(),every_attribute_array[3].strip()])
+    length_save_word_list = len(save_word_list)
+    for i in range(length_save_word_list-4):
+        if i == 0:
+            if save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1\
+                and save_word_list[i][0] not in MULTIBYTE_MARK:
+                savetxt_list.append(save_word_list[i][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][0] not in MULTIBYTE_MARK and save_word_list[i + 2][1].find('名詞') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][0] not in MULTIBYTE_MARK \
+                and save_word_list[i + 3][1].find('名詞') != -1 and save_word_list[i + 3][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][0] not in MULTIBYTE_MARK \
+                and save_word_list[i + 1][1].find('名詞') != -1 and save_word_list[i + 1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])
+
+        if i>0:
+            if save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1 \
+                and save_word_list[i-1][1].find('名詞-数') == -1 and save_word_list[i][0] not in MULTIBYTE_MARK:
+                savetxt_list.append(save_word_list[i][0])#保存名词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][0] not in MULTIBYTE_MARK and save_word_list[i + 2][1].find('名詞') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])#保存数词+数词+名词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][0] not in MULTIBYTE_MARK\
+                and save_word_list[i + 3][1].find('名詞') != -1 and save_word_list[i + 3][1].find('名詞-数') == -1 \
+                and save_word_list[i - 1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0]+save_word_list[i + 3][0])#保存数词+数词+数词+名词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i+1][1].find('名詞-数') == -1\
+                and save_word_list[i + 1][0] not in MULTIBYTE_MARK and save_word_list[i + 1][1].find('名詞') != -1 \
+                and save_word_list[i + 1][1].find('名詞-数') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])#保存数词+名词
+
+            '''
+            #保存数词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞') == -1 and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])#保存数词+数词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
+                and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][1].find('名詞') == -1\
+                and save_word_list[i - 1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])#保存数词+数词+数词
+            elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i+1][1].find('名詞') == -1\
+                and save_word_list[i-1][1].find('名詞-数') == -1:
+                savetxt_list.append(save_word_list[i][0])#保存数词
+            '''
+
+    # savetxt_list = [' '.join(i) for i in savetxt_list]  # 不加这一句,重要度就是频率
+
+    new_txt_list = []
+    for every_word in savetxt_list:#每个字符都不在特殊符号里并且不是数字的词语添加到new_txt_list
+        append_flag = True
+        if (every_word is not None and len(every_word.strip()) > 1 and not (every_word.strip().isdigit())):
+            for i in every_word:
+                if i in MULTIBYTE_MARK:
+                    append_flag = False
+                    break
+            if append_flag == True:
+                new_txt_list.append(every_word)
+
+    new_txt_list2 = []
+    for every_word in new_txt_list:#不包含no_need_words的词加入到new_txt_list2
+        find_flag = False
+        for word in no_need_words:
+            if every_word.find(word) != -1:
+                find_flag = True
+                break
+        if find_flag == False:
+            new_txt_list2.append(every_word)
+
+    new_txt_list3 = []
+    for every_word in new_txt_list2:#去掉0和片假名长音'ー'开头的字符串
+        find_flag = False
+        if not every_word.startswith('0') and not  every_word.startswith('０') and not every_word.startswith('ー'):
+            new_txt_list3.append(every_word)
+    new_txt_list3 = [' '.join(i) for i in new_txt_list3]#不加这一句,重要度就是频率
+    cmp_nouns = new_txt_list3
     return cmp_nouns
+
 
 
 def _increase(cmp_nouns, terms):
@@ -415,7 +484,8 @@ def modify_agglutinative_lang(data):
             eng = 0
         # 前後ともアルファベットなら半角空白空け、それ以外なら区切りなしで連結
         if eng and eng_pre:
-            data_disp = data_disp + " " + noun
+            # data_disp = data_disp + " " + noun
+            data_disp = data_disp + noun
         else:
             data_disp = data_disp + noun
         eng_pre = eng
@@ -619,9 +689,9 @@ def calculate_importance_of_everyword_output_to_excel(server, user, password, da
                     excel = copy(rexcel)  # 用xlutils提供的copy方法将xlrd的对象转化为xlwt的对象
                     worksheet = excel.get_sheet(0)  # 用xlwt对象的方法获得要操作的sheet
                     current_row = rows
-                    content = re.sub('\s', '', employee_report)#去掉空白字符
+                    # content = re.sub('\s', '', employee_report)#去掉空白字符
                     # 複合語を抽出し、重要度を算出
-                    frequency_member = cmp_noun_dict(content)
+                    frequency_member = cmp_noun_dict(employee_report)
                     LR_member = score_lr(frequency_member, ignore_words=IGNORE_WORDS, lr_mode=1, average_rate=1)
                     term_imp_member = term_importance(frequency_member, LR_member)
                     # 重要度が高い順に並べ替えて出力
@@ -686,7 +756,7 @@ if __name__=="__main__":
     # employee_list = get_employee_list_from_table_report_target(server, user, password, database)#获取人员列表
     employee_list=[1, 26]
     employee_list =[str(i) for i in employee_list]
-    employee_list = employee_list[201:]
+    # employee_list = employee_list[201:]
     calculate_importance_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week)#生成关键字和重要度写入Excel
     time_end = datetime.datetime.now()
     end = time.clock()
