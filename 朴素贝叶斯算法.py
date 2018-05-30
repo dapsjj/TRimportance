@@ -279,7 +279,8 @@ class NaiveBayes():
 
 
 if __name__ == '__main__':
-    
+    '''
+    #一个人的报告
     csv_file = r'D:/19teacher.csv'
     nb = NaiveBayes()
     top_list = nb.read_top_from_csv(csv_file)
@@ -292,9 +293,18 @@ if __name__ == '__main__':
     print('推定カテゴリ: %s' % (nb.classify(doc)))  # 推定カテゴリ: Pythonになるはず
     print('Aカテゴリである確率: %s' % nb.score_without_log(employee_keywords_list, 'A'))
     print('Bカテゴリである確率: %s' % nb.score_without_log(employee_keywords_list, 'B'))
-    
+    '''
 
-
+    #271人的报告
+    teacher_csv_file = r'D:/19teacher.csv'
+    employee_csv_file = r'D:/271people.csv'
+    nb = NaiveBayes()
+    teacher_top_list = nb.read_top_from_csv(teacher_csv_file)
+    for row in teacher_top_list:
+        nb.train(row[1], row[2])
+    employee_top_list = nb.read_top_from_csv(employee_csv_file)
+    for row in employee_top_list:
+        print('employeeNo:%s\t推定カテゴリ: %s' % (row[0],nb.classify(row[1])))  # 推定カテゴリ: Pythonになるはず
 
 
 
