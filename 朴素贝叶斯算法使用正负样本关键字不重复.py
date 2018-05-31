@@ -2,6 +2,7 @@ import math
 import sys
 import MeCab
 import csv
+from decimal import Decimal
 
 no_need_words = ["これ","ここ","こと","それ","ため","よう","さん","そこ","たち","ところ","それぞれ","これら","どれ","br"]
 
@@ -312,18 +313,26 @@ if __name__ == '__main__':
     # print(len(negative_key_word))
     # negative_key_word = list(set(negative_key_word))
     # print(len(negative_key_word))
+
     for word in positive_key_word:
         if word not in negative_key_word:
             positive_list.append(word)
-
     for word in negative_key_word:
         if word not in positive_key_word:
             negative_list.append(word)
+
+    # list_A_before = list(set(positive_key_word))
+    # list_B_before = list(set(negative_key_word))
+    # list_A_after = list(set(positive_list))
+    # list_B_after = list(set(negative_list))
+    # for i in list_B_after:
+    #     print(i)
 
     nb.train(positive_list, 'A')
     nb.train(negative_list, 'B')
 
     employee_top_list = nb.read_top_from_csv(employee_csv_file)
+
     for row in employee_top_list:
         # print('employeeNo:%s\t推定カテゴリ: %s' % (row[0],nb.classify(row[1])))  # 推定カテゴリ: Pythonになるはず
         employee_keywords_list = nb.to_words(row[1])
