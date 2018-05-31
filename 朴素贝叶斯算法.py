@@ -204,7 +204,7 @@ class NaiveBayes():
                 new_txt_list3.append(every_word)
         # new_txt_list3 = [' '.join(i) for i in new_txt_list3]
         cmp_nouns = new_txt_list3
-        return tuple(cmp_nouns)
+        return cmp_nouns
 
     def word_count_up(self, word, category):
         self.word_count.setdefault(category, {})
@@ -289,7 +289,7 @@ if __name__ == '__main__':
     doc = ''
     with open(r'D:/3.txt', 'r', encoding='utf-8') as f:
         doc = f.read()
-    employee_keywords_list = list(nb.to_words(doc))
+    employee_keywords_list = nb.to_words(doc)
     print('推定カテゴリ: %s' % (nb.classify(doc)))  # 推定カテゴリ: Pythonになるはず
     print('Aカテゴリである確率: %s' % nb.score_without_log(employee_keywords_list, 'A'))
     print('Bカテゴリである確率: %s' % nb.score_without_log(employee_keywords_list, 'B'))
@@ -304,7 +304,10 @@ if __name__ == '__main__':
         nb.train(row[1], row[2])
     employee_top_list = nb.read_top_from_csv(employee_csv_file)
     for row in employee_top_list:
-        print('employeeNo:%s\t推定カテゴリ: %s' % (row[0],nb.classify(row[1])))  # 推定カテゴリ: Pythonになるはず
+        employee_keywords_list = nb.to_words(row[1])
+        # print('employeeNo:%s\t推定カテゴリ: %s' % (row[0],nb.classify(row[1])))
+        print(row[0], nb.classify(row[1]), nb.score_without_log(employee_keywords_list, 'A'),
+              nb.score_without_log(employee_keywords_list, 'B'), sep='\t')
 
 
 
