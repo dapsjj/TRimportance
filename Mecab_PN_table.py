@@ -22,7 +22,7 @@ def get_top_list(server, user, password, database):
         conn = pymssql.connect(server, user, password, database)
         cur = conn.cursor()
         sql = " select convert(int,employee_code) as employee_code,report_week,remark from report " \
-              " where report_year=2018 and report_week between 1 and 22 and  employee_code in ('10023844','780') " \
+              " where report_year=2018 and report_week between 1 and 22 and  employee_code in ('1','10023844','780') " \
               " order by employee_code,report_week "
         cur.execute(sql)
         rows = cur.fetchall()
@@ -93,18 +93,20 @@ def get_pnsum(diclist):
 
 
 if __name__=="__main__":
-    server = 'X.X.X.X'
+    server = '10.2.6.241'
     user = 'read'
     password = 'read'
-    database = 'XX'
+    database = 'TRIAL'
 
     top_list = get_top_list(server, user, password, database)
-    with open(r'D:/20180606toplist.csv', 'w', newline='', encoding='ANSI') as f:
+    title = [['ID', 'WEEK', 'TEXT']]
+    with open(r'D:/20180606toplist.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
+        writer.writerows(title)#先写标题
         writer.writerows(top_list)
 
     # tw_df = pd.read_csv(r'D:/01.csv', encoding='utf-8')
-    tw_df = pd.read_csv(r'D:/20180606toplist.csv', encoding='ANSI')
+    tw_df = pd.read_csv(r'D:/20180606toplist.csv', encoding='utf-8')
     m = MeCab.Tagger('')  # 指定しなければIPA辞書
 
     pn_df = pd.read_csv(r'D:/20180605dict.txt', \
@@ -140,13 +142,14 @@ if __name__=="__main__":
 
     aura_df = pd.DataFrame({'ID': tw_df['ID'],
                             'WEEK':tw_df['WEEK'],
-                            'TEXT': text_list,
+                            # 'TEXT': text_list,
                             'PN': pnmeans_list,
                             'sumPN':pnsum_list
                             },
-                           columns=['ID','WEEK', 'TEXT', 'PN','sumPN']
+                           # columns=['ID','WEEK', 'TEXT', 'PN','sumPN']
+                           columns=['ID','WEEK', 'PN','sumPN']
                            )
-    aura_df = aura_df.sort_values(by='PN', ascending=True)
+    aura_df = aura_df.sort_values(by=['ID','WEEK'], ascending=True)
 
     aura_df.to_csv(r'D:/aura.csv', \
                    index=None, \
