@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import re
 import csv
 import time
@@ -6,16 +7,40 @@ import matplotlib.pyplot as plt
 import MeCab
 import random
 import numpy as np
+import csv
+import pymssql
+
 
 '''
 http://www.statsbeginner.net/entry/2017/05/07/091435
 #这个网页的代码坑很多
 '''
 
-tw_df = pd.read_csv(r'D:/01.csv', encoding='ANSI')
-# MeCabインスタンス作成
-m = MeCab.Tagger('')  # 指定しなければIPA辞書
-# -----テキストを形態素解析して辞書のリストを返す関数----- #
+
+def get_top_list(server, user, password, database):
+    try:
+        conn = pymssql.connect(server, user, password, database)
+        cur = conn.cursor()
+        sql = " select convert(int,employee_code) as employee_code,report_week,remark from report " \
+              " where report_year=2018 and report_week between 1 and 22 and  employee_code in ('10023844','780') " \
+              " order by employee_code,report_week "
+        cur.execute(sql)
+        rows = cur.fetchall()
+        if rows :
+            top_list = []
+            for top in rows:
+                top_list.append(list(top))
+            return top_list
+        else:
+            return ""
+    except pymssql.Error as ex:
+        raise ex
+    except Exception as ex:
+        raise ex
+    finally:
+        conn.close()
+
+
 def get_diclist(text):
     parsed = m.parse(text)      # 形態素解析結果（改行を含む文字列として得られる）
     lines = parsed.split('\n')  # 解析結果を1行（1語）ごとに分けてリストにする
@@ -27,16 +52,6 @@ def get_diclist(text):
         diclist.append(d)
     return(diclist)
 
-pn_df = pd.read_csv(r'D:/20180605dict.txt',\
-                    sep=':',
-                    encoding='utf-8',
-                    names=('Word','Reading','POS', 'PN')
-                   )
-# pn_df.loc[pn_df.Word == '細胞', 'PN']
-word_list = list(pn_df['Word'])
-pn_list = list(pn_df['PN'])  # 中身の型はnumpy.float64
-pn_dict = dict(zip(word_list, pn_list))
-# print(pn_dict)
 
 # 形態素解析結果の単語ごとdictデータにPN値を追加する関数
 def add_pnvalue(diclist_old):
@@ -51,9 +66,6 @@ def add_pnvalue(diclist_old):
         diclist_new.append(word)
     return(diclist_new)
 
-# test_text = '今あります。'
-# dl_test = get_diclist(test_text)
-# dl_test = add_pnvalue(dl_test)
 
 def get_pnmean(diclist):
     pn_list = []
@@ -61,46 +73,83 @@ def get_pnmean(diclist):
         pn = word['PN']
         if pn != 'notfound':
             pn_list.append(pn)  # notfoundだった場合は追加もしない
-    if len(pn_list) > 0:        # 「全部notfound」じゃなければ
+    if len(pn_list) > 0:  # 「全部notfound」じゃなければ
         pnmean = np.mean(pn_list)
     else:
-        pnmean = 0              # 全部notfoundならゼロにする
-    return(pnmean)
+        pnmean = 0  # 全部notfoundならゼロにする
+    return (pnmean)
 
-pnmeans_list = []
-id_list = []
-for id in tw_df['ID']:
-    id_list.append(id)
-
-i = 0
-for tw in tw_df['TEXT']:
-    dl_old = get_diclist(tw)
-    dl_new = add_pnvalue(dl_old)
-    for item in dl_new:
-        print(id_list[i],item['Surface'],item['POS1'],item['PN'],sep='\t')
-    pnmean = get_pnmean(dl_new)
-    pnmeans_list.append(pnmean)
-    i += 1
-
-text_list = list(tw_df['TEXT'])
-for i in range(len(text_list)):
-    text_list[i] = text_list[i].replace('\n', ' ')
+def get_pnsum(diclist):
+    pn_list = []
+    for word in diclist:
+        pn = word['PN']
+        if pn != 'notfound':
+            pn_list.append(pn)  # notfoundだった場合は追加もしない
+    if len(pn_list) > 0:  # 「全部notfound」じゃなければ
+        pnsum = sum(pn_list)
+    else:
+        pnsum = 0  # 全部notfoundならゼロにする
+    return pnsum
 
 
-# ツイートID、本文、PN値を格納したデータフレームを作成
-aura_df = pd.DataFrame({'ID':tw_df['ID'],
-                        'TEXT':text_list,
-                        'PN':pnmeans_list,
-                       },
-                       columns=['ID', 'TEXT', 'PN']
-                      )
-# PN値の昇順でソート
-aura_df = aura_df.sort_values(by='PN', ascending=True)
+if __name__=="__main__":
+    server = 'X.X.X.X'
+    user = 'read'
+    password = 'read'
+    database = 'XX'
 
+    top_list = get_top_list(server, user, password, database)
+    with open(r'D:/20180606toplist.csv', 'w', newline='', encoding='ANSI') as f:
+        writer = csv.writer(f)
+        writer.writerows(top_list)
 
-# CSVを出力（ExcelでみたいならUTF8ではなくShift-JISを指定すべき）
-aura_df.to_csv(r'D:/aura.csv',\
-                index=None,\
-                encoding='utf-8',\
-                quoting=csv.QUOTE_NONNUMERIC\
-               )
+    # tw_df = pd.read_csv(r'D:/01.csv', encoding='utf-8')
+    tw_df = pd.read_csv(r'D:/20180606toplist.csv', encoding='ANSI')
+    m = MeCab.Tagger('')  # 指定しなければIPA辞書
+
+    pn_df = pd.read_csv(r'D:/20180605dict.txt', \
+                        sep=':',
+                        encoding='utf-8',
+                        names=('Word', 'Reading', 'POS', 'PN')
+                        )
+    word_list = list(pn_df['Word'])
+    pn_list = list(pn_df['PN'])  # 中身の型はnumpy.float64
+    pn_dict = dict(zip(word_list, pn_list))
+
+    pnmeans_list = []
+    pnsum_list = []
+    id_list = []
+    for id in tw_df['ID']:
+        id_list.append(id)
+
+    i = 0
+    for tw in tw_df['TEXT']:
+        dl_old = get_diclist(tw)
+        dl_new = add_pnvalue(dl_old)
+        # for item in dl_new:
+        #     print(id_list[i], item['Surface'], item['POS1'], item['PN'], sep='\t')
+        pnmean = get_pnmean(dl_new)
+        pnmeans_list.append(pnmean)
+        pnsum = get_pnsum(dl_new)
+        pnsum_list.append(pnsum)
+        i += 1
+
+    text_list = list(tw_df['TEXT'])
+    for i in range(len(text_list)):
+        text_list[i] = text_list[i].replace('\n', ' ')
+
+    aura_df = pd.DataFrame({'ID': tw_df['ID'],
+                            'WEEK':tw_df['WEEK'],
+                            'TEXT': text_list,
+                            'PN': pnmeans_list,
+                            'sumPN':pnsum_list
+                            },
+                           columns=['ID','WEEK', 'TEXT', 'PN','sumPN']
+                           )
+    aura_df = aura_df.sort_values(by='PN', ascending=True)
+
+    aura_df.to_csv(r'D:/aura.csv', \
+                   index=None, \
+                   encoding='utf-8', \
+                   quoting=csv.QUOTE_NONNUMERIC \
+                   )
