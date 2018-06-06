@@ -93,10 +93,10 @@ def get_pnsum(diclist):
 
 
 if __name__=="__main__":
-    server = '10.2.6.241'
+    server = 'x.x.x.x'
     user = 'read'
     password = 'read'
-    database = 'TRIAL'
+    database = 'x'
 
     top_list = get_top_list(server, user, password, database)
     title = [['ID', 'WEEK', 'TEXT']]
