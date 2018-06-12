@@ -210,18 +210,18 @@ def cmp_noun_list(data):
         if i == 0:
             if save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1\
                 and save_word_list[i][0] not in MULTIBYTE_MARK:
-                savetxt_list.append(save_word_list[i][0])
+                savetxt_list.append(save_word_list[i][0])#保存名词
             elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
                 and save_word_list[i + 2][0] not in MULTIBYTE_MARK and save_word_list[i + 2][1].find('名詞') != -1 \
                 and save_word_list[i + 2][1].find('名詞-数') == -1:
-                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])#保存数词+数词+名词
             elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][1].find('名詞-数') != -1 \
                 and save_word_list[i + 2][1].find('名詞-数') != -1 and save_word_list[i + 3][0] not in MULTIBYTE_MARK \
                 and save_word_list[i + 3][1].find('名詞') != -1 and save_word_list[i + 3][1].find('名詞-数') == -1:
-                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0])
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0] + save_word_list[i + 2][0] + save_word_list[i + 3][0])#保存数词+数词+数词+名词
             elif save_word_list[i][1].find('名詞-数') != -1 and save_word_list[i + 1][0] not in MULTIBYTE_MARK \
                 and save_word_list[i + 1][1].find('名詞') != -1 and save_word_list[i + 1][1].find('名詞-数') == -1:
-                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])
+                savetxt_list.append(save_word_list[i][0] + save_word_list[i + 1][0])#保存数词+名词
 
         if i>0:
             if save_word_list[i][1].find('名詞') != -1 and save_word_list[i][1].find('名詞-数') == -1 \
@@ -280,13 +280,11 @@ def cmp_noun_list(data):
 
     new_txt_list3 = []
     for every_word in new_txt_list2:#去掉0和片假名长音'ー'开头的字符串
-        find_flag = False
         if not every_word.startswith('0') and not  every_word.startswith('０') and not every_word.startswith('ー'):
             new_txt_list3.append(every_word)
     new_txt_list3 = [' '.join(i) for i in new_txt_list3]#不加这一句,重要度就是频率
     cmp_nouns = new_txt_list3
     return cmp_nouns
-
 
 
 def _increase(cmp_nouns, terms):
@@ -753,10 +751,8 @@ if __name__=="__main__":
     read_dateConfig_file_set_year_week()#读配置文件设置report_year和report_week
     logger.info("report_year:" + report_year)
     logger.info("report_week:" + report_week)
-    # employee_list = get_employee_list_from_table_report_target(server, user, password, database)#获取人员列表
-    employee_list=[1, 26]
+    employee_list=[5, 33]
     employee_list =[str(i) for i in employee_list]
-    # employee_list = employee_list[201:]
     calculate_importance_of_everyword_output_to_excel(server, user, password, database, employee_list, report_year, report_week)#生成关键字和重要度写入Excel
     time_end = datetime.datetime.now()
     end = time.clock()
