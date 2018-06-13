@@ -43,23 +43,22 @@ def output_score_magnitude(tableView,csv_name):
     magnitude_list = []
     i = 0
     for t_text in tableView['TEXT']:
-        t_text = t_text.split('。')
-        for text in t_text:
-            text = text.replace("<br/>", "")
-            text = text.replace("<br>", "")
-            text = text.strip()
-            text = text+'。'#按照句号拆分后就没有句号了,所以这里再补上句号.
-            if len(text) < 2:
-                continue
-            document = types.Document(content=text, type=enums.Document.Type.PLAIN_TEXT)
-            sentiment = client.analyze_sentiment(document=document).document_sentiment
+        t_text = t_text.replace("<br/>", "")
+        t_text = t_text.replace("<br>", "")
+        document = types.Document(content=t_text,type=enums.Document.Type.PLAIN_TEXT)
+        sentiment = client.analyze_sentiment(document=document)
+        for index, sentence in enumerate(sentiment.sentences):
+            every_score = sentence.sentiment.score
+            every_magnitude = sentence.sentiment.magnitude
+            # print(index, sentence.text.content, every_score, every_magnitude)
             employee_list.append(tableView['ID'][i])
             year_list.append(tableView['YEAR'][i])
             week_list.append(tableView['WEEK'][i])
-            text_list.append(text)
-            score_list.append(sentiment.score)
-            magnitude_list.append(sentiment.magnitude)
+            text_list.append(sentence.text.content)
+            score_list.append(every_score)
+            magnitude_list.append(every_magnitude)
         i += 1
+
     aura_df = pd.DataFrame({'ID': employee_list,
                             'YEAR': year_list,
                             'WEEK': week_list,
@@ -82,8 +81,6 @@ if __name__=="__main__":
     password = 'x'
     database = 'x'
 
-
-
     top_list = get_top_list(server, user, password, database)
     title = [['ID', 'YEAR', 'WEEK', 'TEXT']]
     with open(r'D:/20180611toplist.csv', 'w', newline='', encoding='utf-8') as f:
@@ -92,5 +89,5 @@ if __name__=="__main__":
         writer.writerows(top_list)
 
     tw_df = pd.read_csv(r'D:/20180611toplist.csv', encoding='utf-8')
-    csv_name = r'D:/20180611Score.csv'
+    csv_name = r'D:/20180613Score.csv'
     output_score_magnitude(tw_df,csv_name)
