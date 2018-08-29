@@ -494,8 +494,9 @@ def insert_report_keyword_importance_frequency_property(server, user, password, 
     :param report_week:top报告周
     :param employee_list:社员list
     '''
-    try:
-        if employee_list:
+
+    if employee_list:
+        try:
             conn = pymssql.connect(server, user, password, database)
             cur = conn.cursor()
             for employee in employee_list:
@@ -516,23 +517,21 @@ def insert_report_keyword_importance_frequency_property(server, user, password, 
                         para_importance_degree = value[1]
                         para_keyword_frequency = value[0]
                         para_free1 = "'" + value[2] + "'"
-                        sql =' if not exists (select 1 from report_keyword_importance_frequency_property where report_year = %s and report_week = %s and employee_code = %s and keyword = %s ) ' \
-                             ' insert into report_keyword_importance_frequency_property (report_year, report_week, employee_code, keyword, importance_degree, keyword_frequency, free1 ) ' \
-                             ' values(%s, %s, %s, %s, %s, %s, %s ) ' \
-                             % (report_year, report_week, employee, para_keyword, report_year, report_week, employee, para_keyword, para_importance_degree,para_keyword_frequency,para_free1)
+                        sql = ' insert into report_keyword_importance_frequency_property (report_year, report_week, employee_code, keyword, importance_degree, keyword_frequency, free1 ) ' \
+                              ' values(%s, %s, %s, %s, %s, %s, %s ) ' \
+                              % (report_year, report_week, employee,para_keyword, para_importance_degree, para_keyword_frequency, para_free1)
                         cur.execute(sql)
                         conn.commit()
-    except pymssql.Error as ex:
-        logger.error("dbException:" + str(ex))
-        raise ex
-    except Exception as ex:
-        logger.error(
-            "Call method insert_report_keyword_importance_frequency_property() error!There is a null value in the parameters.!")
-        logger.error("Exception:" + str(ex))
-        conn.rollback()
-        raise ex
-    finally:
-        conn.close()
+        except pymssql.Error as ex:
+            logger.error("dbException:" + str(ex))
+            raise ex
+        except Exception as ex:
+            logger.error("Call method insert_report_keyword_importance_frequency_property() error!There is a null value in the parameters.!")
+            logger.error("Exception:" + str(ex))
+            conn.rollback()
+            raise ex
+        finally:
+            conn.close()
 
 def delete_report_keyword_importance_frequency_property(server, user, password, database, report_year, report_week):
     '''
