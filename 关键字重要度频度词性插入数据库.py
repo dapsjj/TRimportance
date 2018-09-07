@@ -484,7 +484,7 @@ def read_report_from_database(server, user, password, database,report_year,repor
         conn.close()
 
 
-def insert_report_keyword_importance_frequency_property(server, user, password, database, employee_list, report_year, report_week):
+def insert_report_keyword_property(server, user, password, database, employee_list, report_year, report_week):
     '''
     :param server:服务器名称
     :param user:用户名
@@ -500,6 +500,7 @@ def insert_report_keyword_importance_frequency_property(server, user, password, 
             conn = pymssql.connect(server, user, password, database)
             cur = conn.cursor()
             for employee in employee_list:
+                append_list = []
                 employee_report = read_report_from_database(server, user, password, database, report_year,report_week,employee)# 社员TOP报告内容
                 if employee_report:
                     # content = re.sub('\s', '', employee_report)#去掉空白字符
@@ -512,28 +513,31 @@ def insert_report_keyword_importance_frequency_property(server, user, password, 
                     totalImportance_member = 0
                     # key_words_lenth_member = len(data_collection_member)
                     key_words_list_memeber = []
+
                     for cmp_noun, value in data_collection_member.most_common():
-                        para_keyword = "'" + modify_agglutinative_lang(cmp_noun) + "'"
+                        para_keyword = modify_agglutinative_lang(cmp_noun)
                         para_importance_degree = value[1]
                         para_keyword_frequency = value[0]
-                        para_free1 = "'" + value[2] + "'"
-                        sql = ' insert into report_keyword_importance_frequency_property (report_year, report_week, employee_code, keyword, importance_degree, keyword_frequency, free1 ) ' \
-                              ' values(%s, %s, %s, %s, %s, %s, %s ) ' \
-                              % (report_year, report_week, employee,para_keyword, para_importance_degree, para_keyword_frequency, para_free1)
-                        cur.execute(sql)
-                        conn.commit()
+                        para_free1 = value[2]
+                        append_list.append((report_year, report_week, employee, para_keyword, para_importance_degree,para_keyword_frequency, para_free1))
+                    sql = ' insert into report_keyword_property (report_year, report_week, employee_code, keyword, importance_degree, keyword_frequency, free1 ) ' \
+                          ' values(%s, %s, %s, %s, %s, %s, %s) '
+                          # % (str(report_year), str(report_week), str(employee), para_keyword, str(para_importance_degree), str(para_keyword_frequency), para_free1)
+                    cur.executemany(sql,append_list)
+                    conn.commit()
+
         except pymssql.Error as ex:
             logger.error("dbException:" + str(ex))
             raise ex
         except Exception as ex:
-            logger.error("Call method insert_report_keyword_importance_frequency_property() error!There is a null value in the parameters.!")
+            logger.error("Call method insert_report_keyword_property() error!There is a null value in the parameters.!")
             logger.error("Exception:" + str(ex))
             conn.rollback()
             raise ex
         finally:
             conn.close()
 
-def delete_report_keyword_importance_frequency_property(server, user, password, database, report_year, report_week):
+def delete_report_keyword_property(server, user, password, database, report_year, report_week):
     '''
       :param server: 服务器名称
       :param user: 用户名
@@ -546,7 +550,7 @@ def delete_report_keyword_importance_frequency_property(server, user, password, 
     try:
         conn = pymssql.connect(server, user, password, database)
         cur = conn.cursor()
-        sql = ' delete from report_keyword_importance_frequency_property where report_year = %s and report_week = %s' \
+        sql = ' delete from report_keyword_property where report_year = %s and report_week = %s' \
               % (report_year, report_week)
         cur.execute(sql)
         conn.commit()
@@ -554,7 +558,7 @@ def delete_report_keyword_importance_frequency_property(server, user, password, 
         logger.error("dbException:" + str(ex))
         raise ex
     except Exception as ex:
-        logger.error("Call method delete_report_keyword_importance_frequency_property() error!")
+        logger.error("Call method delete_report_keyword_property() error!")
         logger.error("Exception:" + str(ex))
         conn.rollback()
         raise ex
@@ -599,8 +603,10 @@ if __name__=="__main__":
     logger.info("report_week:" + report_week)
     employee_list = get_report_employee_list(server, user, password, database, report_year,report_week)  # 从report表获取X年,X周,社员列表
     employee_list =[str(i[2]) for i in employee_list]
-    delete_report_keyword_importance_frequency_property(server, user, password, database, report_year, report_week)
-    insert_report_keyword_importance_frequency_property(server, user, password, database, employee_list, report_year, report_week)
+    #employee_list = [1,3,5,9,16,26,33,36,51,54,58,72,73,74,76,78,79,84,90,94,96,103,108,111,112,113,116,118,120,121,125,127,129,138,141,145,154,156,158,160,162,164,171,172,181,184,187,200,211,213]
+    #employee_list =[str(i) for i in employee_list]
+    delete_report_keyword_property(server, user, password, database, report_year, report_week)
+    insert_report_keyword_property(server, user, password, database, employee_list, report_year, report_week)
     time_end = datetime.datetime.now()
     end = time.clock()
     logger.info("Program end,now time is:"+str(time_end))
