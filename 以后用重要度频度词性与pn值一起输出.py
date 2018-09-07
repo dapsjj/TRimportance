@@ -554,6 +554,7 @@ def insert_report_keyword_property(server, user, password, database, employee_li
             conn = pymssql.connect(server, user, password, database)
             cur = conn.cursor()
             for employee in employee_list:
+                append_list = []
                 employee_report = read_report_from_database(server, user, password, database, report_year,report_week,employee)# 社员TOP报告内容
                 if employee_report:
                     # content = re.sub('\s', '', employee_report)#去掉空白字符
@@ -574,16 +575,16 @@ def insert_report_keyword_property(server, user, password, database, employee_li
                     #     cur.execute(sql)
                     #     conn.commit()
                     for cmp_noun in data_collection_member:
-                        para_keyword = "'" + modify_agglutinative_lang(cmp_noun) + "'"
+                        para_keyword = modify_agglutinative_lang(cmp_noun)
                         para_importance_degree = data_collection_member[cmp_noun][1]
                         para_keyword_frequency = data_collection_member[cmp_noun][0]
                         para_pn = data_collection_member[cmp_noun][3]
-                        para_free1 = "'" + data_collection_member[cmp_noun][2] + "'"
-                        sql = ' insert into report_keyword_property (report_year, report_week, employee_code, keyword, pn, importance_degree, keyword_frequency, free1 ) ' \
-                              ' values(%s, %s, %s, %s, %s, %s, %s, %s ) ' \
-                              % (report_year, report_week, employee,para_keyword, para_pn, para_importance_degree, para_keyword_frequency, para_free1)
-                        cur.execute(sql)
-                        conn.commit()
+                        para_free1 = data_collection_member[cmp_noun][2]
+                        append_list.append((report_year, report_week, employee, para_keyword, para_importance_degree, para_pn, para_keyword_frequency, para_free1))
+                    sql = ' insert into report_keyword_property (report_year, report_week, employee_code, keyword, importance_degree, pn, keyword_frequency, free1 ) ' \
+                          ' values(%s, %s, %s, %s, %s, %s, %s, %s ) '
+                    cur.executemany(sql, append_list)
+                    conn.commit()
         except pymssql.Error as ex:
             logger.error("dbException:" + str(ex))
             raise ex
