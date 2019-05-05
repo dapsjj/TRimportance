@@ -180,7 +180,9 @@ def remove_css_for_column(para_str):
     '''
     try:
         if para_str:
-            para_str = re.sub('(?i)(<br/?>)|<[^>]*>', r'\1', para_str)
+            #替换&nbsp;
+            para_str = para_str.replace("&nbsp;"," ") #
+            para_str = re.sub('(?i)(<br/?>)|<[^>]*>', r'\1', para_str)#去掉尖括号开始尖括号结束的内容,不包括<br>,<br/>,<BR>,<BR/>
             return para_str
     except Exception as ex:
         logger.error("Call method remove_css_for_column() error!")
