@@ -9,6 +9,7 @@ import logging
 import os
 import configparser
 import re
+from bs4 import BeautifulSoup
 import decimal #不加打包成exe会出错
 
 
@@ -181,9 +182,15 @@ def remove_css_for_column(para_str):
     try:
         if para_str:
             para_str = para_str.replace("&nbsp;"," ") #替换html中的空格
-            para_str = para_str.replace("_"," ") #替换下划线为空格
-            para_str = re.sub('(?i)(<br/?>)|<[^>]*>', r'\1', para_str)#去掉尖括号开始尖括号结束的内容,不包括<br>,<br/>,<BR>,<BR/>
-            return para_str
+            # para_str = para_str.replace("_"," ") #替换下划线为空格
+            # para_str = re.sub('(?i)(<br/?>)|<[^>]*>', r'\1', para_str)#去掉尖括号开始尖括号结束的内容,不包括<br>,<br/>,<BR>,<BR/>
+            soup = BeautifulSoup(para_str, 'html.parser')#如果用BeautifulSoup的话,&nbsp;不用替换成空格,BeautifulSoup会自动转化&nbsp;成空格。也就是para_str = para_str.replace("&nbsp;"," ")可以注释掉
+            for e in soup.find_all():
+                if e.name not in ['p', 'br']:
+                    e.unwrap()#去掉html中的标签,但是标签中的内容会保存
+                else:
+                    e.attrs = {}#去掉html标签中的属性
+            return str(soup)
     except Exception as ex:
         logger.error("Call method remove_css_for_column() error!")
         logger.error("Exception:" + str(ex))
