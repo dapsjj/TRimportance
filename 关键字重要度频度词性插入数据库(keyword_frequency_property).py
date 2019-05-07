@@ -122,8 +122,8 @@ def cmp_noun_list(data):
     savetxt_list=[]
     mecab = MeCab.Tagger("-Ochasen") #有词性标注的
     # mecab = MeCab.Tagger("-Owakati")  # 没有词性标注的
-    # data = data.replace("<br/>", "")
-    # data = data.replace("<br>", "")
+    data = data.replace("&lt;", "<")
+    data = data.replace("&gt;", ">")
     cmp_nouns = mecab.parse(data)
     every_row = cmp_nouns.split('\n')
     save_word_list = []
